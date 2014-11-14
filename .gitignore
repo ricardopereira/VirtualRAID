@@ -1,6 +1,8 @@
 # Build
 *.class
 *.log
+*.properties
+nbproject/private/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
