@@ -2,7 +2,12 @@
 *.class
 *.log
 *.properties
-nbproject/private/
+
+# VirtualRaid
+VirtualRaidClient/nbproject/private/
+VirtualRaidLibrary/nbproject/private/
+VirtualRaidRepo/nbproject/private/
+VirtualRaidServer/nbproject/private/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
