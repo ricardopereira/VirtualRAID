@@ -1,19 +1,18 @@
 package classes;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class RepositoryFile {
+public class RepositoryFile implements Serializable {
     
     private String name;
-    private int size; //bytes
-    private Date dateCreated;
+    private long size; //bytes
     private Date dateModified;
-    private int locks;
+    private transient int locks;
     
-    public RepositoryFile(String name, int size, Date dateCreated, Date dateModified) {
+    public RepositoryFile(String name, long size, Date dateModified) {
         this.name = name;
         this.size = size;
-        this.dateCreated = dateCreated;
         this.dateModified = dateModified;
     }
     
@@ -39,15 +38,15 @@ public class RepositoryFile {
     /**
      * @return the size bytes
      */
-    public int getSizeBytes() {
+    public long getSizeBytes() {
         return size;
     }
     
-    public int getSizeKb() {
+    public long getSizeKb() {
         return size/1024;
     }
     
-    public int getSizeMb() {
+    public long getSizeMb() {
         return getSizeKb()/1024;
     }
 
@@ -56,20 +55,6 @@ public class RepositoryFile {
      */
     public void setSizeBytes(int size) {
         this.size = size;
-    }
-
-    /**
-     * @return the dateCreated
-     */
-    public Date getDateCreated() {
-        return dateCreated;
-    }
-
-    /**
-     * @param dateCreated the dateCreated to set
-     */
-    public void setDateCreated(Date dateCreated) {
-        this.dateCreated = dateCreated;
     }
 
     /**
