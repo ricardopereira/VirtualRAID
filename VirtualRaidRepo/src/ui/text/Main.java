@@ -11,9 +11,9 @@ public class Main {
      */
     public static void main(String[] args) {
         // Criação do repositorio
-        Repository<RepositoryFile> self = null;
+        Repository self = null;
         try {
-            self = new Repository<>(InetAddress.getLocalHost().getHostAddress());
+            self = new Repository(InetAddress.getLocalHost().getHostAddress());
         } catch (UnknownHostException e) {
             System.out.println("Não foi possível obter o endereço local.");
         }

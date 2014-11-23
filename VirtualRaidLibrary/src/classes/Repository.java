@@ -3,11 +3,11 @@ package classes;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Repository<T> implements Serializable {
+public class Repository implements Serializable {
     
     private String address;
     private int port;
-    private ArrayList<T> files;
+    final private ArrayList<RepositoryFile> files;
     
     public Repository(String address) {
         this.address = address;
@@ -20,7 +20,7 @@ public class Repository<T> implements Serializable {
         sb.append("Repositório: ");
         sb.append(address);
         sb.append("\n");
-        for (T item : files) {
+        for (RepositoryFile item : files) {
             sb.append(item.toString());
             sb.append("\n");
         }
@@ -58,8 +58,20 @@ public class Repository<T> implements Serializable {
     /**
      * @return the files
      */
-    public ArrayList<T> getFiles() {
+    public ArrayList<RepositoryFile> getFiles() {
         return files;
+    }
+    
+    /**
+     * @return the files
+     */
+    public FilesList getFilesList() {
+        // Obtem a lista de ficheiros num map
+        FilesList map = new FilesList();
+        for (RepositoryFile item : files) {
+            map.add(new VirtualFile(item));
+        }
+        return map;
     }
     
 }

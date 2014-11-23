@@ -3,9 +3,9 @@ package ui.text;
 import classes.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 public class Main {
-
     // Teste
     public static ArrayList<Repository> repositories;
             
@@ -14,12 +14,30 @@ public class Main {
      */
     public static void main(String[] args) {
         // Teste
+        FilesList allFiles = testeFicheirosRecebidosDeRepositorios();
+        
+        // RP: Receber parâmetro porto pelo "args"
+        int porto=9000; //Por defeito
+        Servidor serv = new Servidor(porto,allFiles);
+        // RP: Uma thread?!
+        //O servidor terá apenas um ServerSocket,
+        //porque senão vamos ter vários portos para ligar ao servidor.
+        serv.start();
+        try {
+            serv.join();
+        } catch (InterruptedException e) {
+            System.err.println("<servidor:main> Ocorreu um erro com a thread do servidor: " + e);
+        }
+    }
+    
+    public static FilesList testeFicheirosRecebidosDeRepositorios() {
+        // Teste
         repositories = new ArrayList<>();
         
         // Repositorio 001
-        Repository<RepositoryFile> r001 = new Repository<>("192.0.0.1");
+        Repository r001 = new Repository("192.0.0.1");
         // Repositorio 002
-        Repository<RepositoryFile> r002 = new Repository<>("192.0.0.2");
+        Repository r002 = new Repository("192.0.0.2");
         
         // Repositório 001 se conectou!
         repositories.add(r001);
@@ -33,6 +51,12 @@ public class Main {
         
         // Mostra o que tem
         showAllFiles();
+        
+        FilesList allFiles = new FilesList();
+        for (Repository item : repositories) {
+            allFiles.addAll(item.getFilesList());
+        }    
+        return allFiles;
     }
     
     public static void showAllFiles() {

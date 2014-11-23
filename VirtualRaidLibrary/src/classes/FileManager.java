@@ -10,21 +10,21 @@ public class FileManager {
     File currentDirectory = null;
     
     // Excepção: Directoria não existe
-    public class DirectoryNotFound extends IOException {
+    public static class DirectoryNotFound extends IOException {
         public DirectoryNotFound(String message) {
             super(message);
         }
     };
     
     // Excepção: Directoria inválida
-    public class DirectoryInvalid extends IOException {
+    public static class DirectoryInvalid extends IOException {
         public DirectoryInvalid(String message) {
             super(message);
         }
     };
     
     // Excepção: Directoria sem permissões
-    public class DirectoryNoPermissions extends IOException {
+    public static class DirectoryNoPermissions extends IOException {
         public DirectoryNoPermissions(String message) {
             super(message);
         }
