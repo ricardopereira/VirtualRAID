@@ -13,7 +13,7 @@ public class Main {
         // Criação do repositorio
         Repository self = null;
         try {
-            self = new Repository(InetAddress.getLocalHost().getHostAddress());
+            self = new Repository(InetAddress.getLocalHost().getHostAddress(), 0);
         } catch (UnknownHostException e) {
             System.out.println("Não foi possível obter o endereço local.");
         }

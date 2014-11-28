@@ -9,8 +9,9 @@ public class Repository implements Serializable {
     private int port;
     final private ArrayList<RepositoryFile> files;
     
-    public Repository(String address) {
+    public Repository(String address, int port) {
         this.address = address;
+        this.port = port;
         files = new ArrayList<>();
     }
 
