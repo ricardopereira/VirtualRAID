@@ -1,7 +1,10 @@
 package ui.text;
 
 import classes.Login;
+import java.io.IOException;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import logic.ClientController;
 
 public class UIText {
@@ -31,7 +34,7 @@ public class UIText {
         }
         
         // Verificar se está autenticado
-        if (!ctrl.getIsAuthenticated()) {
+        while (!ctrl.getIsAuthenticated()) {
             menuAuthenticate();
         }
         
@@ -50,23 +53,15 @@ public class UIText {
     }
 
     private int getOptionNumber() {
-        Scanner s = new Scanner(System.in);   
+        Scanner s = new Scanner(System.in);
         while (!s.hasNextInt()) {
             s.next();
         }
         return s.nextInt();
     }
     
-    private int getOptionNumber(int from, int to) {
-        Scanner s = new Scanner(System.in);
-        int nr = from;
-        while (!s.hasNextInt() && (nr < from || nr > to)) {
-            nr = s.nextInt();
-        }
-        return s.nextInt();
-    }
-    
     private int menu() {
+        int opt = 0;
         // Imprimir lista de ficheiros
         // ToDo
         
@@ -88,15 +83,33 @@ public class UIText {
             System.out.println(" 2. Upload file");
             System.out.println(" 3. Delete file");
             
-            int opt;
             do {
-               opt = getOptionNumber(0,3);
-                        
-            } while (opt > 0);
+                System.out.println("Opção: ");
+                opt = getOptionNumber();
+            } while (opt < 0 || opt > 3);
+
+            // Guarda a opção escolhida
+            currentMenuOption = MenuOptions.values()[opt];
+                    
+            switch (currentMenuOption) {
+                case OPT_DOWNLOAD:
+                    System.out.println("Choose file to download: ");
+                    // ToDo
+                    break;
+                case OPT_UPLOAD:
+                    System.out.println("Choose file to upload: ");
+                    // ToDo
+                    break;
+                case OPT_DELETE:
+                    System.out.println("Choose file to delete: ");
+                    // ToDo
+                    break;
+                default:
+                    System.out.println("Closing...");
+                    break;
+            }            
         }
-        
-        // Teste
-        return 0;
+        return opt;
     }
     
     private void menuAuthenticate() {
@@ -116,9 +129,11 @@ public class UIText {
                 break;
             }
         }
-        sc.close();
 
-        //ctrl.login();
+        if (ctrl.authenticate(login))
+            System.out.println("Login com sucesso.\n");
+        else
+            System.out.println("Credenciais inválidas.\n");
     }
 
 }

@@ -12,6 +12,8 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClientController {
     // Constantes
@@ -80,35 +82,46 @@ public class ClientController {
         return isAuthenticated;
     }
     
-    public void login() {
-        if (!getIsConnected())
-            return;
+    public void authenticate(String username, String password) {
+        Login login = new Login(username);
+        login.setPassword(password);
+        authenticate(login);
+    }
+    
+    public boolean authenticate(Login login) {
+        if (!getIsConnected() || getIsAuthenticated())
+            return false;
+        
+        if (login == null)
+            return false;
         
         try {
             ObjectOutputStream oos = new ObjectOutputStream(mainSocket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(mainSocket.getInputStream());
-            BufferedReader pin = new BufferedReader(new InputStreamReader(mainSocket.getInputStream()));
-            System.out.println(pin.readLine());
             
-            // Autenticação
-            Login login = null;
-            
+            // Envia dados para autenticação
             oos.writeObject(login);
+            oos.flush();
             
-            // Teste
-            System.out.println(pin.readLine());
-            // Receber lista de ficheiros
-            FilesList allFiles;
-            try {
-                allFiles = (FilesList) ois.readObject();
-                System.out.println(allFiles.toString());
-            } catch (ClassNotFoundException e) {
-                System.err.println("Não foi possível receber a lista de ficheiros:\n\t" + e);
+            // Recebe a resposta do servidor
+            isAuthenticated = (Boolean) ois.readObject();
+            
+            if (isAuthenticated) {
+                // Receber lista de ficheiros inicial
+                FilesList allFiles;
+                try {
+                    allFiles = (FilesList) ois.readObject();
+                    // Teste
+                    System.out.println(allFiles.toString());
+                } catch (ClassNotFoundException e) {
+                    System.err.println("Não foi possível receber a lista de ficheiros:\n\t" + e);
+                }
             }
+        } catch (ClassNotFoundException e) {
+            System.err.println("Ocorreu um erro a obter o resultado da autenticação:\n\t" + e);
         } catch (IOException e) {
             System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
-        } finally {
-            disconnectToServer();
         }
+        return isAuthenticated;
     }
 }

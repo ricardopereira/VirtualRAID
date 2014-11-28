@@ -3,16 +3,17 @@ package classes;
 import java.io.Serializable;
 
 public class Login implements Serializable {
-    final private String nome;
+    
+    final private String username;
     private String password;
     
-    public Login(String nome) {
-        this.nome = nome;
+    public Login(String username) {
+        this.username = username;
         this.password = "";
     }
     
-    public String getNome() {
-        return nome;
+    public String getUsername() {
+        return username;
     }
     
     public void setPassword(String value) {
@@ -22,4 +23,5 @@ public class Login implements Serializable {
     public String getPassword() {
         return password;
     }
+    
 }

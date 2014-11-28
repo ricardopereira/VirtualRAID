@@ -41,40 +41,63 @@ public class ClientThread extends Thread {
         boolean authenticated = false;
         
         try {
-            oos = new ObjectOutputStream(socket.getOutputStream());
-            ois = new ObjectInputStream(socket.getInputStream());
-            pout = new PrintWriter(socket.getOutputStream());
-            
-            while(!authenticated) {
-                pout.println("Introduza username e password: <username password> ");
-                pout.flush();
-                
+            // Verificar autenticacao
+            while (!authenticated) {
+                oos = new ObjectOutputStream(socket.getOutputStream());
+                ois = new ObjectInputStream(socket.getInputStream());
+
+                // Obtem autenticacao do utilizador
                 login = (Login) ois.readObject();
+                
+                if (login == null) { //EOF
+                    // Para terminar a thread
+                    break;
+                }
+                
                 // Verificar login
                 if (isValid(login)) {
-                    pout.println("Login efetuado com sucesso.");
-                    pout.flush();
-                    
                     authenticated = true;
+                    oos.writeObject(authenticated);
+                    oos.flush();
                     // Enviar lista de ficheiros inicial
                     oos.writeObject(files);
+                    oos.flush();
                 }
                 else {
-                    pout.println("Credenciais inválidas.");
-                    pout.flush();
+                    oos.writeObject(authenticated);
+                    oos.flush();
                 }
             }
+            
+            // ToDo
+            if (authenticated) {
+                while (true) {
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    ois = new ObjectInputStream(socket.getInputStream());
+
+                    // Obtem autenticacao do utilizador
+                    Object req = ois.readObject();
+                    
+                    if (req == null) { //EOF
+                        // Para terminar a thread
+                        break;
+                    }
+                }        
+            }
         } catch (ClassNotFoundException e) {
-            System.err.println("<Server:ClientThread> Ocorreu um erro ao ler: " + e);        
+            System.err.println("<Server:ClientThread> Ocorreu um erro a validar as credenciais: " + e);        
         } catch (SocketTimeoutException e) {
             System.err.println("<Server:ClientThread> Ligação terminou: " + e);
         } catch(IOException e){
             System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
         }
-
+        
         try {
             socket.close();
         } catch (IOException s) {/*Silencio*/}
+        
+        // Debug
+        System.out.println("Cliente desligou...");
     }
     
     private static boolean isValid(Login login) {
@@ -84,7 +107,7 @@ public class ClientThread extends Thread {
             Scanner sc = new Scanner(new File(FILE_CREDENTIALS));
             while (sc.hasNext()) {
                 // Verifica linha a linha
-                if (sc.nextLine().equals(login.getNome()+" "+login.getPassword())) {
+                if (sc.nextLine().equals(login.getUsername()+" "+login.getPassword())) {
                     // Valid
                     return true;
                 }
