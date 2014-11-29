@@ -69,52 +69,51 @@ public class UIText {
         int opt = 0;
         // Imprimir lista de ficheiros
         printFilesList();
-        
-        // Menu do Cliente
-        if (currentMenuOption != MenuOptions.OPT_NONE) {
-            System.out.println("MENU:");
-            System.out.println(" 0. Exit");
-            System.out.println(" Option: "+currentMenuOption);
-            
-            // ToDo
-            Scanner sc = new Scanner(System.in);
-            if (sc.nextInt() == 0)
-                return 0;
-        }
-        else {
-            System.out.println("MENU:");
-            System.out.println(" 0. Exit");
-            System.out.println(" 1. Download file");
-            System.out.println(" 2. Upload file");
-            System.out.println(" 3. Delete file");
-            
-            do {
-                System.out.println(" Option: ");
-                opt = getOptionNumber();
-            } while (opt < 0 || opt > 3);
 
-            // Guarda a opção escolhida
-            currentMenuOption = MenuOptions.values()[opt];
-                    
-            switch (currentMenuOption) {
-                case OPT_DOWNLOAD:
-                    System.out.println("Choose file to download: ");
-                    // ToDo
-                    break;
-                case OPT_UPLOAD:
-                    System.out.println("Choose file to upload: ");
-                    // ToDo
-                    break;
-                case OPT_DELETE:
-                    System.out.println("Choose file to delete: ");
-                    // ToDo
-                    break;
-                default:
-                    System.out.println("Closing...");
-                    break;
-            }            
-        }
-        return opt;
+        do {
+            System.out.println(" Option: ");
+            opt = getOptionNumber();
+        } while (opt < 0 || opt > 3);
+        
+        // Verificar se é para terminar a aplicação
+        if (opt == 0)
+            return 0; // Exit
+
+        // Guarda a opção escolhida
+        currentMenuOption = MenuOptions.values()[opt];
+
+        switch (currentMenuOption) {
+            case OPT_DOWNLOAD:
+                System.out.println("Choose file to download: ");
+                // ToDo
+                opt = getOptionNumber();
+
+                System.out.println("File downloaded.\n");
+                currentMenuOption = MenuOptions.OPT_NONE;
+                break;
+            case OPT_UPLOAD:
+                System.out.println("Choose file to upload: ");
+                // ToDo
+                opt = getOptionNumber();
+
+                System.out.println("File uploaded.\n");
+                currentMenuOption = MenuOptions.OPT_NONE;
+                break;
+            case OPT_DELETE:
+                System.out.println("Choose file to delete: ");
+                // ToDo
+                opt = getOptionNumber();
+
+                System.out.println("File deleted.\n");
+                currentMenuOption = MenuOptions.OPT_NONE;
+                break;
+            default:
+                System.out.println("Closing...");
+                break;
+        }            
+
+        // A aplicação continua a correr
+        return -1;
     }
     
     private void menuAuthenticate() {
@@ -141,14 +140,42 @@ public class UIText {
             System.out.println("Credenciais inválidas.\n");
     }
     
+    public void printMenuOptions() {
+        System.out.println("MENU:");
+        System.out.println(" 0. Exit");
+        System.out.println(" 1. Download file");
+        System.out.println(" 2. Upload file");
+        System.out.println(" 3. Delete file");
+    }
+    
     public void printFilesList() {
+        // Imprime a lista de ficheiros
         if (ctrl.canUseFilesList()) {
             System.out.println("\nFILES:");
             System.out.println(ctrl.getFilesList().toString());
+            
+            if (currentMenuOption == MenuOptions.OPT_NONE) {
+                printMenuOptions();
+            }
         }
         else {
             System.out.println("Não existem ficheiros.");
-        }        
+        }
+        
+        // Se tiver opção seleccionada...
+        if (currentMenuOption != MenuOptions.OPT_NONE) {
+            switch (currentMenuOption) {
+                case OPT_DOWNLOAD:
+                    System.out.println("Choose file to download: ");
+                    break;
+                case OPT_UPLOAD:
+                    System.out.println("Choose file to upload: ");
+                    break;
+                case OPT_DELETE:
+                    System.out.println("Choose file to delete: ");
+                    break;
+            }       
+        }
     }
     
     private IFilesListListener refreshFilesList = new IFilesListListener() {
