@@ -77,7 +77,7 @@ public class ClientThread extends Thread {
             fileChangedEvent();
             
             // Debug: Simulador de alterações de ficheiros
-            //new SimulateFileChangeThread(this).start();
+            new SimulateFileChangeThread(this).start();
             
             // ToDo
             socket.setSoTimeout(0);
@@ -103,8 +103,9 @@ public class ClientThread extends Thread {
                     // Devolver resposta
                     switch (req.getOption()) {
                         case REQ_DOWNLOAD:
-                            // Teste
-                            oos.writeObject(new Response("127.0.0.1",9001));
+                            // ToDo: Verificar o repositório que tem o ficheiro 
+                            //e que está mais livre
+                            oos.writeObject(new Response("127.0.0.1",9001,req));
                             oos.flush();
                             break;
                         case REQ_UPLOAD:

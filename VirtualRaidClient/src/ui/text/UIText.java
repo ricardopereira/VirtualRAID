@@ -3,13 +3,17 @@ package ui.text;
 import classes.FilesList;
 import classes.Login;
 import classes.VirtualFile;
+import enums.ResponseType;
 import java.util.Scanner;
 import logic.ClientController;
-import logic.IFilesListListener;
+import logic.ClientListener;
 
 public class UIText {
     
     private ClientController ctrl;
+    
+    public static final int APP_EXIT = 0;
+    public static final int APP_DONE = 9;
     
     // Várias opções possíveis no menu
     public static enum MenuOptions {
@@ -21,10 +25,11 @@ public class UIText {
     
     // Opção escolhida fica em memória
     private MenuOptions currentMenuOption = MenuOptions.OPT_NONE;
+    private boolean hasPendingRequest = false;
     
     public UIText(ClientController ctrl) {
         this.ctrl = ctrl;
-        ctrl.setFilesListChangedListener(refreshFilesList);
+        ctrl.setClientListener(clientListener);
     }
     
     public void startInterface() {
@@ -47,7 +52,7 @@ public class UIText {
         
         // Menu
         while (true) {
-            if (menu() == 0)
+            if (menu() == APP_EXIT)
                 break;
         }
         
@@ -65,18 +70,32 @@ public class UIText {
     }
     
     private int menu() {
-        int opt = 0;
+        int opt = APP_EXIT;
         // Imprime a lista de opções, mais a lista de ficheiros
         printCurrentInterface(false);
-
-        do {
-            System.out.println(" Option: ");
-            opt = getOptionNumber();
-        } while (opt < 0 || opt > 3);
+        
+        if (hasPendingRequest) {
+            // Tem acção pendente, ou seja, está a fazer download ou upload
+            //e dar possibilidade de cancelar...
+            do {
+                System.out.println("Enter key "+APP_DONE+" to cancel: ");
+                opt = getOptionNumber();
+            } while (opt != APP_DONE && hasPendingRequest);
+            
+            // ToDo: Cancel...
+            return APP_DONE;
+        }
+        else {
+            // Escolha da opção do Menu...
+            do {
+                System.out.println(" Option: ");
+                opt = getOptionNumber();
+            } while (opt < APP_EXIT || opt > 3);    
+        }
         
         // Verificar se é para terminar a aplicação
-        if (opt == 0)
-            return 0; // Exit
+        if (opt == APP_EXIT || opt == APP_DONE)
+            return opt; // Exit
 
         // Guarda a opção escolhida
         currentMenuOption = MenuOptions.values()[opt];
@@ -99,14 +118,15 @@ public class UIText {
                     //mas ainda não se iniciou o download e outro cliente
                     //remover esse ficheiro!
                     
-                    ctrl.downloadFile(choosedFile);
+                    ctrl.requestDownloadFile(choosedFile);
+                    hasPendingRequest = true;
                     
-                    System.out.println("File downloaded.\n");
+                    System.out.println("Checking if file is available...");
                 }
-                else
+                else {
                     System.out.println("File don't exist.\n");
-
-                currentMenuOption = MenuOptions.OPT_NONE;
+                    currentMenuOption = MenuOptions.OPT_NONE;
+                }
                 break;
             case OPT_UPLOAD:
                 System.out.println("Choose file to upload: ");
@@ -163,7 +183,7 @@ public class UIText {
     
     private void printMenuOptions() {
         System.out.println("MENU:");
-        System.out.println(" 0. Exit");
+        System.out.println(" "+APP_EXIT+". Exit");
         System.out.println(" 1. Download file");
         System.out.println(" 2. Upload file");
         System.out.println(" 3. Delete file");
@@ -174,7 +194,35 @@ public class UIText {
         printCurrentInterface(true);
     }
     
-    public void printCurrentInterface(boolean printChooseOption) {
+    private void printCurrentInterface(boolean printChooseOption) {        
+        if (hasPendingRequest) {
+            // Tem acção pendente, ou seja, está a fazer download ou upload...
+            printPendingRequest(printChooseOption);
+        }
+        else {
+            // Está à espera da escolha do ficheiro
+            printPendingChoice(printChooseOption);
+        }
+    }
+    
+    private void printPendingRequest(boolean printCancelOption) {
+        // Se tiver opção seleccionada...
+        switch (currentMenuOption) {
+            case OPT_DOWNLOAD:
+                System.out.println("File available.");
+                break;
+            case OPT_UPLOAD:
+                System.out.println("Upload permited.");
+                break;
+            default:
+                System.out.println("DEBUG: printCurrentInterface - Algo correu mal...");
+                break;
+        }
+        if (printCancelOption)
+            System.out.println(" Input key "+APP_DONE+" to cancel: ");
+    }
+    
+    private void printPendingChoice(boolean printChooseOption) {
         // Imprime a lista de ficheiros
         System.out.println("\nFILES:");
         if (ctrl.canUseFilesList()) {
@@ -184,7 +232,7 @@ public class UIText {
             System.out.println("Não existem ficheiros.\n");
         }
 
-        // Só imprimi o Menu se não seleccionou nenhuma opção
+        // Só imprime o Menu se não seleccionou nenhuma opção
         if (currentMenuOption == MenuOptions.OPT_NONE) {
             // Menu
             printMenuOptions();
@@ -209,11 +257,34 @@ public class UIText {
         }
     }
     
-    private IFilesListListener refreshFilesList = new IFilesListListener() {
+    private ClientListener clientListener = new ClientListener() {
 
         @Override
         public void onFilesListChanged(FilesList newFilesList) {
             printCurrentInterface();
+        }
+        
+        @Override
+        public void onResponseError(ResponseType status) {
+            
+        }
+        
+        @Override
+        public void onDownloadStarted(String fileName) {
+            System.out.println(fileName);
+        }
+        
+        @Override
+        public void onDownloadProgress(int nbytes) {
+            
+        }
+        
+        @Override
+        public void onDownloadFinished() {
+            System.out.println("Done");
+            System.out.println("Input 9 to return to menu: ");
+            hasPendingRequest = false;
+            currentMenuOption = MenuOptions.OPT_NONE;
         }
         
     };

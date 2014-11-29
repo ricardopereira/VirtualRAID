@@ -27,8 +27,8 @@ public class ClientController {
     
     private boolean isAuthenticated = false;
     private volatile FilesList filesList = new FilesList();
-    private RefreshFilesThread refreshFilesThread;
-    private IFilesListListener filesListChangedListener;
+    private ResponsesManager responsesManagerThread;
+    private ClientListener clientListener;
     
     public ClientController() {
         
@@ -71,15 +71,29 @@ public class ClientController {
         if (!getIsConnected())
             return;
         
-        if (refreshFilesThread != null) {
-            refreshFilesThread.cancel();
-            refreshFilesThread = null;
+        // Cancelar a thread que gere as respostas do Servidor
+        if (responsesManagerThread != null) {
+            responsesManagerThread.cancel();
         }
-        filesList = null;
         
         try {
+            // Fecha a ligação com o Servidor
             mainSocket.close();
-        } catch (IOException ex) {/*Silencio*/}
+        } catch (IOException e) {/*Silencio*/}
+        
+        if (responsesManagerThread != null) {
+            try {
+                // Esperar que ele cancele a última operação
+                responsesManagerThread.join();
+            } catch (InterruptedException e) {/*Silencio*/}
+        }
+
+        responsesManagerThread = null;
+        filesList = null;        
+    }
+    
+    public Socket getMainSocket() {
+        return mainSocket;
     }
     
     public boolean getIsConnected() {
@@ -87,7 +101,7 @@ public class ClientController {
     }
     
     public boolean getIsAuthenticated() {
-        return isAuthenticated;
+        return getIsConnected() && isAuthenticated;
     }
     
     public void authenticate(String username, String password) {
@@ -115,11 +129,9 @@ public class ClientController {
             isAuthenticated = (Boolean) ois.readObject();
             
             if (isAuthenticated) {                
-                // Receber lista de ficheiros inicial
-                refreshFilesThread = new RefreshFilesThread(mainSocket);
-                // Callback quando a lista de ficheiros é alterada
-                refreshFilesThread.setFilesListChangedListener(refreshFilesList);
-                refreshFilesThread.start();
+                // Neste ponto irá receber lista de ficheiros inicial
+                responsesManagerThread = new ResponsesManager(this);
+                responsesManagerThread.start();
             }
         } catch (ClassNotFoundException e) {
             System.err.println("Ocorreu um erro a obter o resultado da autenticação:\n\t" + e);
@@ -129,8 +141,8 @@ public class ClientController {
         return isAuthenticated;
     }
     
-    public ResponseType downloadFile(VirtualFile file) {
-        if (!getIsConnected() || !getIsAuthenticated())
+    public ResponseType requestDownloadFile(VirtualFile file) {
+        if (!getIsAuthenticated())
             return ResponseType.RES_FAILED;
         
         if (file == null)
@@ -138,55 +150,71 @@ public class ClientController {
         
         try {
             ObjectOutputStream oos = new ObjectOutputStream(mainSocket.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(mainSocket.getInputStream());
             
             System.out.println("Request: sending...");
             
             // Envia pedido de download
             oos.writeObject(new Request(file, RequestType.REQ_DOWNLOAD));
             oos.flush();
-            
-            System.out.println("Request: sended...");
-            
-            // Obtem reposta
-            Response res = (Response) ois.readObject();
-            
-            if (res == null) { //EOF
-                // Para terminar a thread
-                return ResponseType.RES_FAILED;
-            }
-            
-            if (res.getStatus() == ResponseType.RES_OK) {
-                //res.getRepositoryAddress()
-                //res.getRepositoryPort()
-                
-                // Teste
-                System.out.println("Connect to: "+res.getRepositoryAddress()+":"+res.getRepositoryPort());
-            }
-            else
-                return res.getStatus();
-            
-        } catch (ClassNotFoundException e) {
-            System.err.println("Ocorreu um erro a obter o resultado da autenticação:\n\t" + e);
         } catch (IOException e) {
             System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            return ResponseType.RES_FAILED;
         }
-        
         return ResponseType.RES_OK;
     }
     
-    public int uploadFile(VirtualFile file) {
+    private void downloadFile(String repositoryAddress, int port, VirtualFile file) {
+        if (file == null)
+            return;
+        
+        // Teste
+        //System.out.println("Downloading a file...");
+        
+        performDownloadStarted("Downloading a file...");
+        
+        performDownloadFinished();
+    }
+    
+    private void uploadFile(String repositoryAddress, int port, VirtualFile file) {
+        if (file == null)
+            return;
+        
+        // ToDo
+        
+        return;
+    }
+    
+    private int deleteFile(VirtualFile file) {
         if (file == null)
             return 0;
+        
+        // ToDo
         
         return 0;
     }
     
-    public int deleteFile(VirtualFile file) {
-        if (file == null)
-            return 0;
+    public void interpretResponse(Response res) {
+        if (res == null)
+            return;
         
-        return 0;
+        // Só inicia o download ou upload se a resposta do servidor for positivo
+        if (res.getStatus() != ResponseType.RES_OK) {
+            performResponseError(res.getStatus());
+        }
+        else if (res.getRequested() == null) {
+            performResponseError(ResponseType.RES_FAILED);
+        }
+        else {
+            switch (res.getRequested().getOption()) {
+                case REQ_DOWNLOAD:
+                    downloadFile(res.getRepositoryAddress(), res.getRepositoryPort(), 
+                        res.getRequested().getFile());
+                    break;
+                case REQ_UPLOAD:
+                    // ToDo
+                    break;
+            }
+        }
     }
     
     public boolean canUseFilesList() {
@@ -197,24 +225,38 @@ public class ClientController {
         return filesList;
     }
     
-    private IFilesListListener refreshFilesList = new IFilesListListener() {
-
-        @Override
-        public void onFilesListChanged(FilesList newFilesList) {
-            filesList = newFilesList;
-            // Callback para a interface
-            performFilesListChanged(filesList);
-        }
-        
-    };
-    
-    public void performFilesListChanged(FilesList filesList) {
-        if (filesListChangedListener != null)
-            filesListChangedListener.onFilesListChanged(filesList);
+    public void setFilesList(FilesList newFilesList) {
+        this.filesList = newFilesList;
+        performFilesListChanged(filesList);
     }
     
-    public void setFilesListChangedListener(IFilesListListener listener) {
-        filesListChangedListener = listener;
+    private void performFilesListChanged(FilesList filesList) {
+        if (clientListener != null)
+            clientListener.onFilesListChanged(filesList);
+    }
+
+    private void performResponseError(ResponseType status) {
+        if (clientListener != null)
+            clientListener.onResponseError(status);
+    }
+
+    private void performDownloadStarted(String fileName) {
+        if (clientListener != null)
+            clientListener.onDownloadStarted(fileName);
+    }
+
+    private void performDownloadProgress(int nbytes) {
+        if (clientListener != null)
+            clientListener.onDownloadProgress(nbytes);
+    }
+    
+    private void performDownloadFinished() {
+        if (clientListener != null)
+            clientListener.onDownloadFinished();
+    }
+    
+    public void setClientListener(ClientListener listener) {
+        clientListener = listener;
     }
     
 }
