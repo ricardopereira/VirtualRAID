@@ -2,6 +2,11 @@ package logic;
 
 import classes.FilesList;
 import classes.Login;
+import classes.Request;
+import classes.Response;
+import classes.VirtualFile;
+import enums.RequestType;
+import enums.ResponseType;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -9,7 +14,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.Collections;
 
 public class ClientController {
     // Constantes
@@ -123,6 +127,66 @@ public class ClientController {
             System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
         }
         return isAuthenticated;
+    }
+    
+    public ResponseType downloadFile(VirtualFile file) {
+        if (!getIsConnected() || !getIsAuthenticated())
+            return ResponseType.RES_FAILED;
+        
+        if (file == null)
+            return ResponseType.RES_FAILED;
+        
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(mainSocket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(mainSocket.getInputStream());
+            
+            System.out.println("Request: sending...");
+            
+            // Envia pedido de download
+            oos.writeObject(new Request(file, RequestType.REQ_DOWNLOAD));
+            oos.flush();
+            
+            System.out.println("Request: sended...");
+            
+            // Obtem reposta
+            Response res = (Response) ois.readObject();
+            
+            if (res == null) { //EOF
+                // Para terminar a thread
+                return ResponseType.RES_FAILED;
+            }
+            
+            if (res.getStatus() == ResponseType.RES_OK) {
+                //res.getRepositoryAddress()
+                //res.getRepositoryPort()
+                
+                // Teste
+                System.out.println("Connect to: "+res.getRepositoryAddress()+":"+res.getRepositoryPort());
+            }
+            else
+                return res.getStatus();
+            
+        } catch (ClassNotFoundException e) {
+            System.err.println("Ocorreu um erro a obter o resultado da autenticação:\n\t" + e);
+        } catch (IOException e) {
+            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+        }
+        
+        return ResponseType.RES_OK;
+    }
+    
+    public int uploadFile(VirtualFile file) {
+        if (file == null)
+            return 0;
+        
+        return 0;
+    }
+    
+    public int deleteFile(VirtualFile file) {
+        if (file == null)
+            return 0;
+        
+        return 0;
     }
     
     public boolean canUseFilesList() {

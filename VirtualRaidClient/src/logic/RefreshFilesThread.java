@@ -21,14 +21,20 @@ public class RefreshFilesThread extends Thread {
             return;
         if (isCanceled)
             return;
-        
+                
         while (true) {
             FilesList filesList = null;
-            try {
+            try {                
                 ObjectInputStream ois = new ObjectInputStream(serverSocket.getInputStream());
                 filesList = (FilesList) ois.readObject();
+                
+                if (filesList == null) { //EOF
+                    // Para terminar a thread
+                    break;
+                }
             } catch (ClassNotFoundException | IOException e) {
                 System.err.println("Não foi possível receber a lista de ficheiros:\n\t" + e);
+                break;
             }
             
             if (isCanceled)

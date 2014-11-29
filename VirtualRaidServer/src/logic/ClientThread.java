@@ -3,6 +3,10 @@ package logic;
 
 import classes.FilesList;
 import classes.Login;
+import classes.Request;
+import classes.Response;
+import enums.RequestType;
+import enums.ResponseType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,8 +22,6 @@ public class ClientThread extends Thread {
     public static final String FILE_CREDENTIALS = "credenciais.txt";
     
     private Socket socket;
-    private ObjectOutputStream oos;
-    private ObjectInputStream ois;
     private boolean authenticated = false;
     
     private FilesList files;
@@ -42,6 +44,8 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         Login login;
+        ObjectOutputStream oos;
+        ObjectInputStream ois;
         
         try {
             // Verificar autenticacao
@@ -72,24 +76,44 @@ public class ClientThread extends Thread {
             // Enviar lista de ficheiros inicial
             fileChangedEvent();
             
-            // Simulador de alterações de ficheiros
-            new SimulateFileChangeThread(this).start();
+            // Debug: Simulador de alterações de ficheiros
+            //new SimulateFileChangeThread(this).start();
             
             // ToDo
             socket.setSoTimeout(0);
             if (authenticated) {
                 while (true) {
                     ois = new ObjectInputStream(socket.getInputStream());
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    
+                    System.out.println("Request: waiting...");
 
                     // Obtem request do utilizador
-                    Object req = ois.readObject();
+                    Request req = (Request) ois.readObject();
+                    
+                    System.out.println("Request: readObject");
                     
                     if (req == null) { //EOF
                         // Para terminar a thread
                         break;
                     }
                     
+                    System.out.println("Request: not null");
+                                        
                     // Devolver resposta
+                    switch (req.getOption()) {
+                        case REQ_DOWNLOAD:
+                            // Teste
+                            oos.writeObject(new Response("127.0.0.1",9001));
+                            oos.flush();
+                            break;
+                        case REQ_UPLOAD:
+                            
+                            break;
+                        case REQ_DELETE:
+                            
+                            break;
+                    }
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -128,6 +152,8 @@ public class ClientThread extends Thread {
     }
     
     public void fileChangedEvent() {
+        ObjectOutputStream oos;
+
         if (!authenticated)
             return;
 

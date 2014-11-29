@@ -2,6 +2,7 @@ package ui.text;
 
 import classes.FilesList;
 import classes.Login;
+import classes.VirtualFile;
 import java.util.Scanner;
 import logic.ClientController;
 import logic.IFilesListListener;
@@ -12,7 +13,10 @@ public class UIText {
     
     // Várias opções possíveis no menu
     public static enum MenuOptions {
-        OPT_NONE, OPT_DOWNLOAD, OPT_UPLOAD, OPT_DELETE;
+        OPT_NONE, 
+        OPT_DOWNLOAD, 
+        OPT_UPLOAD, 
+        OPT_DELETE;
     }
     
     // Opção escolhida fica em memória
@@ -80,24 +84,46 @@ public class UIText {
         switch (currentMenuOption) {
             case OPT_DOWNLOAD:
                 System.out.println("Choose file to download: ");
-                // Obter o 
+                // Obter o índice do ficheiro
                 opt = getOptionNumber();
+                
+                // ToDo: o índice pode mudar se a lista de ficheiros sofrer alterações
+                //Colocar esta parte como synchronize!
+                
+                if (opt >= 0 && opt < ctrl.getFilesList().size()) {
+                    // Criar cópia do registo para evitar problemas com as threads
+                    VirtualFile choosedFile = new VirtualFile(ctrl.getFilesList().get(opt));
+                    System.out.println("Start download of:\n\t" + choosedFile.toString());
+                    
+                    // RP: pensar no caso em que um cliente escolheu um ficheiro
+                    //mas ainda não se iniciou o download e outro cliente
+                    //remover esse ficheiro!
+                    
+                    ctrl.downloadFile(choosedFile);
+                    
+                    System.out.println("File downloaded.\n");
+                }
+                else
+                    System.out.println("File don't exist.\n");
 
-                System.out.println("File downloaded.\n");
                 currentMenuOption = MenuOptions.OPT_NONE;
                 break;
             case OPT_UPLOAD:
                 System.out.println("Choose file to upload: ");
-                // ToDo
+                // Obter o índice do ficheiro
                 opt = getOptionNumber();
+                
+                // ToDo
 
                 System.out.println("File uploaded.\n");
                 currentMenuOption = MenuOptions.OPT_NONE;
                 break;
             case OPT_DELETE:
                 System.out.println("Choose file to delete: ");
-                // ToDo
+                // Obter o índice do ficheiro
                 opt = getOptionNumber();
+                
+                // ToDo
 
                 System.out.println("File deleted.\n");
                 currentMenuOption = MenuOptions.OPT_NONE;
