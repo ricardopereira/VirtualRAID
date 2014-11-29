@@ -2,11 +2,7 @@ package ui.text;
 
 import classes.FilesList;
 import classes.Login;
-import java.io.IOException;
-import java.util.Collections;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import logic.ClientController;
 import logic.IFilesListListener;
 
@@ -14,10 +10,12 @@ public class UIText {
     
     private ClientController ctrl;
     
+    // Várias opções possíveis no menu
     public static enum MenuOptions {
         OPT_NONE, OPT_DOWNLOAD, OPT_UPLOAD, OPT_DELETE;
     }
     
+    // Opção escolhida fica em memória
     private MenuOptions currentMenuOption = MenuOptions.OPT_NONE;
     
     public UIText(ClientController ctrl) {
@@ -43,6 +41,7 @@ public class UIText {
             menuAuthenticate();
         }
         
+        // Menu
         while (true) {
             if (menu() == 0)
                 break;
@@ -52,11 +51,7 @@ public class UIText {
         ctrl.disconnectToServer();
     }
     
-    private String getOptionString() {
-        Scanner sc = new Scanner(System.in);
-        return sc.nextLine();
-    }
-
+    // Obter opção da linha de comandos
     private int getOptionNumber() {
         Scanner s = new Scanner(System.in);
         while (!s.hasNextInt()) {
@@ -67,8 +62,8 @@ public class UIText {
     
     private int menu() {
         int opt = 0;
-        // Imprimir lista de ficheiros
-        printFilesList();
+        // Imprime a lista de opções, mais a lista de ficheiros
+        printCurrentInterface(false);
 
         do {
             System.out.println(" Option: ");
@@ -85,7 +80,7 @@ public class UIText {
         switch (currentMenuOption) {
             case OPT_DOWNLOAD:
                 System.out.println("Choose file to download: ");
-                // ToDo
+                // Obter o 
                 opt = getOptionNumber();
 
                 System.out.println("File downloaded.\n");
@@ -140,7 +135,7 @@ public class UIText {
             System.out.println("Credenciais inválidas.\n");
     }
     
-    public void printMenuOptions() {
+    private void printMenuOptions() {
         System.out.println("MENU:");
         System.out.println(" 0. Exit");
         System.out.println(" 1. Download file");
@@ -148,18 +143,25 @@ public class UIText {
         System.out.println(" 3. Delete file");
     }
     
-    public void printFilesList() {
+    private void printCurrentInterface() {
+        // Por defeito
+        printCurrentInterface(true);
+    }
+    
+    public void printCurrentInterface(boolean printChooseOption) {
         // Imprime a lista de ficheiros
+        System.out.println("\nFILES:");
         if (ctrl.canUseFilesList()) {
-            System.out.println("\nFILES:");
             System.out.println(ctrl.getFilesList().toString());
-            
-            if (currentMenuOption == MenuOptions.OPT_NONE) {
-                printMenuOptions();
-            }
         }
         else {
-            System.out.println("Não existem ficheiros.");
+            System.out.println("Não existem ficheiros.\n");
+        }
+
+        // Só imprimi o Menu se não seleccionou nenhuma opção
+        if (currentMenuOption == MenuOptions.OPT_NONE) {
+            // Menu
+            printMenuOptions();
         }
         
         // Se tiver opção seleccionada...
@@ -176,13 +178,16 @@ public class UIText {
                     break;
             }       
         }
+        else if (printChooseOption) {
+            System.out.println(" Option: ");
+        }
     }
     
     private IFilesListListener refreshFilesList = new IFilesListListener() {
 
         @Override
         public void onFilesListChanged(FilesList newFilesList) {
-            printFilesList();
+            printCurrentInterface();
         }
         
     };

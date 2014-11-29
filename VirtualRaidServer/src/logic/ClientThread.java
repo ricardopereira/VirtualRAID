@@ -29,6 +29,10 @@ public class ClientThread extends Thread {
         this.files = startFiles;
     }
     
+    public FilesList getFilesList() {
+        return files;
+    }
+    
     public void setFilesList(FilesList newFiles) {
         if (files != null)
             return;
