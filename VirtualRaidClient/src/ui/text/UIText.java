@@ -1,11 +1,14 @@
 package ui.text;
 
+import classes.FilesList;
 import classes.Login;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import logic.ClientController;
+import logic.IFilesListListener;
 
 public class UIText {
     
@@ -14,10 +17,12 @@ public class UIText {
     public static enum MenuOptions {
         OPT_NONE, OPT_DOWNLOAD, OPT_UPLOAD, OPT_DELETE;
     }
+    
     private MenuOptions currentMenuOption = MenuOptions.OPT_NONE;
     
     public UIText(ClientController ctrl) {
         this.ctrl = ctrl;
+        ctrl.setFilesListChangedListener(refreshFilesList);
     }
     
     public void startInterface() {
@@ -63,7 +68,7 @@ public class UIText {
     private int menu() {
         int opt = 0;
         // Imprimir lista de ficheiros
-        // ToDo
+        printFilesList();
         
         // Menu do Cliente
         if (currentMenuOption != MenuOptions.OPT_NONE) {
@@ -84,7 +89,7 @@ public class UIText {
             System.out.println(" 3. Delete file");
             
             do {
-                System.out.println("Opção: ");
+                System.out.println(" Option: ");
                 opt = getOptionNumber();
             } while (opt < 0 || opt > 3);
 
@@ -135,5 +140,24 @@ public class UIText {
         else
             System.out.println("Credenciais inválidas.\n");
     }
+    
+    public void printFilesList() {
+        if (ctrl.canUseFilesList()) {
+            System.out.println("\nFILES:");
+            System.out.println(ctrl.getFilesList().toString());
+        }
+        else {
+            System.out.println("Não existem ficheiros.");
+        }        
+    }
+    
+    private IFilesListListener refreshFilesList = new IFilesListListener() {
+
+        @Override
+        public void onFilesListChanged(FilesList newFilesList) {
+            printFilesList();
+        }
+        
+    };
 
 }

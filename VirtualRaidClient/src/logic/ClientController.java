@@ -2,18 +2,14 @@ package logic;
 
 import classes.FilesList;
 import classes.Login;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Collections;
 
 public class ClientController {
     // Constantes
@@ -26,6 +22,9 @@ public class ClientController {
     private Socket tempSocket;
     
     private boolean isAuthenticated = false;
+    private volatile FilesList filesList = new FilesList();
+    private RefreshFilesThread refreshFilesThread;
+    private IFilesListListener filesListChangedListener;
     
     public ClientController() {
         
@@ -69,6 +68,12 @@ public class ClientController {
         if (!getIsConnected())
             return;
         
+        if (refreshFilesThread != null) {
+            refreshFilesThread.cancel();
+            refreshFilesThread = null;
+        }
+        filesList = null;
+        
         try {
             mainSocket.close();
         } catch (IOException ex) {/*Silencio*/}
@@ -106,16 +111,12 @@ public class ClientController {
             // Recebe a resposta do servidor
             isAuthenticated = (Boolean) ois.readObject();
             
-            if (isAuthenticated) {
+            if (isAuthenticated) {                
                 // Receber lista de ficheiros inicial
-                FilesList allFiles;
-                try {
-                    allFiles = (FilesList) ois.readObject();
-                    // Teste
-                    System.out.println(allFiles.toString());
-                } catch (ClassNotFoundException e) {
-                    System.err.println("Não foi possível receber a lista de ficheiros:\n\t" + e);
-                }
+                refreshFilesThread = new RefreshFilesThread(mainSocket);
+                // Callback quando a lista de ficheiros é alterada
+                refreshFilesThread.setFilesListChangedListener(refreshFilesList);
+                refreshFilesThread.start();
             }
         } catch (ClassNotFoundException e) {
             System.err.println("Ocorreu um erro a obter o resultado da autenticação:\n\t" + e);
@@ -124,4 +125,33 @@ public class ClientController {
         }
         return isAuthenticated;
     }
+    
+    public boolean canUseFilesList() {
+        return filesList != null && !filesList.isEmpty();
+    }
+    
+    public FilesList getFilesList() {
+        return filesList;
+    }
+    
+    private IFilesListListener refreshFilesList = new IFilesListListener() {
+
+        @Override
+        public void onFilesListChanged(FilesList newFilesList) {
+            filesList = newFilesList;
+            // Callback para a interface
+            performFilesListChanged(filesList);
+        }
+        
+    };
+    
+    public void performFilesListChanged(FilesList filesList) {
+        if (filesListChangedListener != null)
+            filesListChangedListener.onFilesListChanged(filesList);
+    }
+    
+    public void setFilesListChangedListener(IFilesListListener listener) {
+        filesListChangedListener = listener;
+    }
+    
 }

@@ -20,7 +20,7 @@ public class ClientThread extends Thread {
     private Socket socket;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
-    PrintWriter pout;
+    private boolean authenticated = false;
     
     private FilesList files;
     
@@ -38,7 +38,6 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         Login login;
-        boolean authenticated = false;
         
         try {
             // Verificar autenticacao
@@ -59,15 +58,15 @@ public class ClientThread extends Thread {
                     authenticated = true;
                     oos.writeObject(authenticated);
                     oos.flush();
-                    // Enviar lista de ficheiros inicial
-                    oos.writeObject(files);
-                    oos.flush();
                 }
                 else {
                     oos.writeObject(authenticated);
                     oos.flush();
                 }
             }
+            
+            // Teste
+            fileChangedEvent();
             
             // ToDo
             if (authenticated) {
@@ -77,12 +76,12 @@ public class ClientThread extends Thread {
 
                     // Obtem autenticacao do utilizador
                     Object req = ois.readObject();
-                    
+
                     if (req == null) { //EOF
                         // Para terminar a thread
                         break;
                     }
-                }        
+                }
             }
         } catch (ClassNotFoundException e) {
             System.err.println("<Server:ClientThread> Ocorreu um erro a validar as credenciais: " + e);        
@@ -116,5 +115,21 @@ public class ClientThread extends Thread {
             System.err.println("Ficheiro "+FILE_CREDENTIALS+" não existe:\n\t"+e.getMessage());
         }
         return false;
+    }
+    
+    public void fileChangedEvent() {
+        if (!authenticated)
+            return;
+
+        try {
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            // Enviar lista de ficheiros inicial
+            oos.writeObject(files);
+            oos.flush();
+        } catch (SocketTimeoutException e) {
+            System.err.println("<Server:ClientThread> Ligação terminou: " + e);
+        } catch(IOException e){
+            System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
+        }
     }
 }

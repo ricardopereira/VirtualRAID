@@ -126,6 +126,7 @@ public class ServerController implements Runnable {
         FilesList allFiles = new FilesList();
         for (Repository item : repositories) {
             allFiles.addAll(item.getFilesList());
+            // ToDo: número de replicas
         }    
         return allFiles;
     }
