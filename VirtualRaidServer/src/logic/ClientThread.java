@@ -8,10 +8,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
+import tests.SimulateFileChangeThread;
 
 public class ClientThread extends Thread {
     
@@ -65,22 +65,27 @@ public class ClientThread extends Thread {
                 }
             }
             
-            // Teste
+            // Enviar lista de ficheiros inicial
             fileChangedEvent();
             
+            // Simulador de alterações de ficheiros
+            new SimulateFileChangeThread(this).start();
+            
             // ToDo
+            socket.setSoTimeout(0);
             if (authenticated) {
                 while (true) {
-                    oos = new ObjectOutputStream(socket.getOutputStream());
                     ois = new ObjectInputStream(socket.getInputStream());
 
-                    // Obtem autenticacao do utilizador
+                    // Obtem request do utilizador
                     Object req = ois.readObject();
-
+                    
                     if (req == null) { //EOF
                         // Para terminar a thread
                         break;
                     }
+                    
+                    // Devolver resposta
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -91,6 +96,7 @@ public class ClientThread extends Thread {
             System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
         }
         
+        authenticated = false;
         try {
             socket.close();
         } catch (IOException s) {/*Silencio*/}
@@ -123,7 +129,7 @@ public class ClientThread extends Thread {
 
         try {
             oos = new ObjectOutputStream(socket.getOutputStream());
-            // Enviar lista de ficheiros inicial
+            // Enviar lista de ficheiros
             oos.writeObject(files);
             oos.flush();
         } catch (SocketTimeoutException e) {

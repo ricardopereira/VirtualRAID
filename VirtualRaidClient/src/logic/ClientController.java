@@ -38,7 +38,6 @@ public class ClientController {
         try {
             // Estabelecer ligação com o servidor
             mainSocket = new Socket(host, port);
-            mainSocket.setSoTimeout(TIMEOUT * 1000);
         } catch (UnknownHostException e) {
             System.err.println("Destino desconhecido:\n\t" + e);
             mainSocket = null;
