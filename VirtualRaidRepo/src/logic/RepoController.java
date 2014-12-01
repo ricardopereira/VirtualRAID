@@ -1,5 +1,6 @@
 package logic;
 
+import classes.Common;
 import classes.FileManager;
 import classes.Repository;
 import java.io.ByteArrayInputStream;
@@ -21,18 +22,16 @@ import java.net.UnknownHostException;
  */
 public class RepoController {
     
-    public static final String MULTICAST_ADDRESS = "230.30.30.30";
-    public static final int MULTICAST_PORT = 9999;
-    public static final String MULTICAST_SECRETKEY = "What'sYourIP?";
-    public static final int MULTICAST_TIME_OUT = 10; //Segundos
-    
     public static final int MAX_SIZE = 1000;
     public static final int TIMEOUT = 5; //Segundos
     
     // Ligação dos Clientes
     private ServerSocket mainSocket;
+    // Multicast para receber um pedido de remoção de uma ficheiro
+    private MulticastThread multicastThread;
     // HeartBeat e lista de ficheiros
-    private DatagramSocket serverSocket;
+    private HeartbeatThread heartbeatThread;
+    private DatagramSocket heartbeatSocket;
     private String serverAddress;
     private int serverPort;
     
@@ -59,11 +58,11 @@ public class RepoController {
         Object result;
         try {
             DatagramSocket socket = new DatagramSocket();
-            socket.setSoTimeout(MULTICAST_TIME_OUT*1000);
+            socket.setSoTimeout(Common.MULTICAST_TIME_OUT*1000);
             
             // Envia broadcast para descobrir servidor
-            DatagramPacket packet = new DatagramPacket(MULTICAST_SECRETKEY.getBytes(), MULTICAST_SECRETKEY.getBytes().length,
-                    InetAddress.getByName(MULTICAST_ADDRESS), MULTICAST_PORT);
+            DatagramPacket packet = new DatagramPacket(Common.MULTICAST_SECRETKEY_UDP.getBytes(), Common.MULTICAST_SECRETKEY_UDP.getBytes().length,
+                    InetAddress.getByName(Common.MULTICAST_ADDRESS), Common.MULTICAST_PORT);
             socket.send(packet);
             
             // Recebe a resposta: IP
@@ -78,10 +77,10 @@ public class RepoController {
             socket.receive(packet);
             serverPort = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
             
-            serverSocket = new DatagramSocket();
+            heartbeatSocket = new DatagramSocket();
             return true;
         } catch (IOException e) {
-            serverSocket = null;
+            heartbeatSocket = null;
             return false;
         }
     }
@@ -97,11 +96,20 @@ public class RepoController {
             System.err.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
             return;
         }
+        
+        // Thread para receber um pedido DeleteFile
+        multicastThread = new MulticastThread();
+        multicastThread.start();
+
+        // Thread para enviar heartbeats
+        heartbeatThread = new HeartbeatThread(this);
+        heartbeatThread.start();
 
         // Escuta os clientes
         try {
             processClientRequests();
         } finally {
+            multicastThread.interrupt();
             // Fecha o socket do servidor
             try {
                 mainSocket.close();
@@ -147,5 +155,8 @@ public class RepoController {
     public int getServerPort() {
         return serverPort;
     }
-    
+
+    public DatagramSocket getHeartbeatSocket() {
+        return heartbeatSocket;
+    }
 }

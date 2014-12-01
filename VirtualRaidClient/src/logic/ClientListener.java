@@ -3,6 +3,12 @@ package logic;
 import classes.FilesList;
 import enums.ResponseType;
 
+/**
+ * ClientListener protótipo.
+ * Responsável por refrescar as opções do utilizador.
+ * 
+ * @author Team
+ */
 public interface ClientListener {
     
     void onFilesListChanged(FilesList newFilesList);

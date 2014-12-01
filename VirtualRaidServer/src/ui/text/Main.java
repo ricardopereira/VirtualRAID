@@ -18,10 +18,6 @@ public class Main {
         }
         
         System.out.println("Servidor de ficheiros iniciado...");
-        // ToDo
-        // Iniciar recepção de repositórios
-        ctrl.startListeningRepositories();
-        
         // Iniciar recepção de clientes
         //(Bloqueante)
         ctrl.startListeningClients();

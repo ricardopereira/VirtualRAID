@@ -5,14 +5,20 @@ import classes.Repository;
 import classes.RepositoryFile;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+ * ServerController classe.
+ * Gere todos os pedidos ao servidor.
+ * 
+ * @author Team
+ */
 public class ServerController implements Runnable {
+    
     // Constantes
     public static final int MAX_SIZE = 4000;
     public static final int TIMEOUT = 30; //segundos
@@ -20,7 +26,7 @@ public class ServerController implements Runnable {
     // Ligação dos Clientes
     private ServerSocket mainSocket;
     // HeartBeat e lista de ficheiros
-    private DatagramSocket repoSocket;
+    private RepositoriesThread repositoriesThread;
     // Pesquisar o servidor
     private MulticastThread multicastThread;
     
@@ -45,11 +51,23 @@ public class ServerController implements Runnable {
             System.err.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
             return;
         }
+        
+        // Thread para enviar a resposta ao broadcast (IP:Porto do servidor)
+        multicastThread = new MulticastThread(mainSocket);
+        multicastThread.start();
+        
+        // Iniciar recepção de Heartbeats e ficheiros de repositórios
+        repositoriesThread = new RepositoriesThread();
+        repositoriesThread.start();
 
         // Escuta os clientes
         try {
             processClientRequests();
         } finally {
+            // Termina as várias threads
+            multicastThread.interrupt();
+            repositoriesThread.interrupt();
+            
             // Fecha o socket do servidor
             try {
                 mainSocket.close();
@@ -61,10 +79,6 @@ public class ServerController implements Runnable {
     
     private void processClientRequests() {
         Socket clientSocket;
-        
-        // Thread para comunicar o IP:Porto
-        multicastThread = new MulticastThread(mainSocket);
-        multicastThread.start();
         
         while (true) {
             // À espera de pedidos de ligação...
@@ -90,14 +104,10 @@ public class ServerController implements Runnable {
             System.out.println("A aguardar novo cliente");
         }
     }
-    
-    public void startListeningRepositories() {
-        // ToDo
-    }
 
     @Override
     public void run() {
-        // ?
+        startListeningClients();
     }
     
     public ArrayList<Repository> getRepositories() {

@@ -48,8 +48,10 @@ public class Main {
         if (ctrl.findServer()) {
             System.out.println("Iniciar ligação com: "+ctrl.getServerAddress()+":"+ctrl.getServerPort());
         }
-        else
+        else {
             System.out.println("Nenhum servidor encontrado.");
+            return;
+        }
         
         // Iniciar recepção de clientes
         //(Bloqueante)

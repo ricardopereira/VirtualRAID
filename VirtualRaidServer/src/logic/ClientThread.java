@@ -17,6 +17,12 @@ import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import tests.SimulateFileChangeThread;
 
+/**
+ * ClientThread classe.
+ * Thread responsável pela interacção com um cliente ligado.
+ * 
+ * @author Team
+ */
 public class ClientThread extends Thread {
     
     public static final String FILE_CREDENTIALS = "credenciais.txt";
