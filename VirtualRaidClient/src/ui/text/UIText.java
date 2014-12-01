@@ -90,7 +90,7 @@ public class UIText {
             do {
                 System.out.println(" Option: ");
                 opt = getOptionNumber();
-            } while (opt < APP_EXIT || opt > 3);    
+            } while (opt < APP_EXIT || opt > 3);
         }
         
         // Verificar se é para terminar a aplicação
@@ -229,7 +229,7 @@ public class UIText {
             System.out.println(ctrl.getFilesList().toString());
         }
         else {
-            System.out.println("Não existem ficheiros.\n");
+            System.out.println("List file is empty.\n");
         }
 
         // Só imprime o Menu se não seleccionou nenhuma opção

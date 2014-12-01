@@ -81,24 +81,19 @@ public class ClientThread extends Thread {
             
             // ToDo
             socket.setSoTimeout(0);
+            
             if (authenticated) {
                 while (true) {
                     ois = new ObjectInputStream(socket.getInputStream());
                     oos = new ObjectOutputStream(socket.getOutputStream());
-                    
-                    System.out.println("Request: waiting...");
 
                     // Obtem request do utilizador
                     Request req = (Request) ois.readObject();
-                    
-                    System.out.println("Request: readObject");
                     
                     if (req == null) { //EOF
                         // Para terminar a thread
                         break;
                     }
-                    
-                    System.out.println("Request: not null");
                                         
                     // Devolver resposta
                     switch (req.getOption()) {

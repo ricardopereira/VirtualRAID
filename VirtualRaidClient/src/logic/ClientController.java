@@ -15,23 +15,28 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+/**
+ * ClientController classe.
+ * Instância responsável pela ligação ao servidor e ao repositório.
+ * 
+ * @author Team
+ */
 public class ClientController {
     // Constantes
     public static final int MAX_SIZE = 4000;
     public static final int TIMEOUT = 30; //Segundos
-    
+        
     // Servidor principal
     private Socket mainSocket;
-    // Repositórios
-    private Socket tempSocket;
     
     private boolean isAuthenticated = false;
-    private volatile FilesList filesList = new FilesList();
+    private String localFilesDirectory;
+    private volatile FilesList filesList = new FilesList(); //Remote files list
     private ResponsesManager responsesManagerThread;
     private ClientListener clientListener;
     
-    public ClientController() {
-        
+    public ClientController(String dir) {
+        this.localFilesDirectory = dir;
     }
     
     public boolean connectToServer(String host, int port) {
@@ -150,9 +155,6 @@ public class ClientController {
         
         try {
             ObjectOutputStream oos = new ObjectOutputStream(mainSocket.getOutputStream());
-            
-            System.out.println("Request: sending...");
-            
             // Envia pedido de download
             oos.writeObject(new Request(file, RequestType.REQ_DOWNLOAD));
             oos.flush();
@@ -166,11 +168,20 @@ public class ClientController {
     private void downloadFile(String repositoryAddress, int port, VirtualFile file) {
         if (file == null)
             return;
-        
-        // Teste
-        //System.out.println("Downloading a file...");
+
+        // Repositórios
+        Socket tempSocket;
+        byte []fileChunck = new byte[MAX_SIZE];
+        int nbytes;                
+        int index = 0;
         
         performDownloadStarted("Downloading a file...");
+        
+        // Recebe ficheiro por blocos
+        //while ((nbytes = in.read(fileChunck)) > 0) {
+            //System.out.println("Recebido o bloco n. " + ++index + " com " + nbytes + " bytes.");
+            //localFileOutputStream.write(fileChunck, 0, nbytes);                 
+        //}
         
         performDownloadFinished();
     }

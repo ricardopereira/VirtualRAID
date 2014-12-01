@@ -9,7 +9,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // ToDo: recever argumentos
+        // ToDo: receber argumentos
         ServerController ctrl = new ServerController(9000);
 
         // Teste: mostra todos os ficheiros de repositórios no ecrã
@@ -17,11 +17,14 @@ public class Main {
             System.out.println(item.toString());
         }
         
+        System.out.println("Servidor de ficheiros iniciado...");
+        // ToDo
+        // Iniciar recepção de repositórios
+        ctrl.startListeningRepositories();
+        
         // Iniciar recepção de clientes
         //(Bloqueante)
-        System.out.println("Servidor de ficheiros iniciado...");
         ctrl.startListeningClients();
-        
         System.out.println("Servidor vai terminar...");
     }
         

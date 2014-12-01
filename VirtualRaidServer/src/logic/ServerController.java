@@ -22,14 +22,14 @@ public class ServerController implements Runnable {
     // HeartBeat e lista de ficheiros
     private DatagramSocket repoSocket;
     // Pesquisar o servidor
-    private MulticastSocket multicastSocket;
+    private MulticastThread multicastThread;
     
     private int port;
     // Lista de repositórios activos
     private ArrayList<Repository> repositories;
     
-    public ServerController(int port) {
-        this.port = port;
+    public ServerController(int listenPort) {
+        this.port = listenPort;
         // Teste: para efeitos de teste
         repositories = exemploDeRepositoriosActivos();
     }
@@ -62,6 +62,10 @@ public class ServerController implements Runnable {
     private void processClientRequests() {
         Socket clientSocket;
         
+        // Thread para comunicar o IP:Porto
+        multicastThread = new MulticastThread(mainSocket);
+        multicastThread.start();
+        
         while (true) {
             // À espera de pedidos de ligação...
             try {
@@ -88,12 +92,12 @@ public class ServerController implements Runnable {
     }
     
     public void startListeningRepositories() {
-        
+        // ToDo
     }
 
     @Override
     public void run() {
-        
+        // ?
     }
     
     public ArrayList<Repository> getRepositories() {

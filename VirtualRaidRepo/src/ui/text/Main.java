@@ -1,8 +1,9 @@
 package ui.text;
 
-import classes.*;
+import classes.FileManager;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import logic.RepoController;
 
 public class Main {
 
@@ -10,22 +11,13 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // Criação do repositorio
-        Repository self = null;
-        try {
-            self = new Repository(InetAddress.getLocalHost().getHostAddress(), 0);
-        } catch (UnknownHostException e) {
-            System.out.println("Não foi possível obter o endereço local.");
-        }
-        
-        if (self == null) {
-            System.out.println("Não foi possível iniciar o repositório.");
-            return;
-        }
+        // ToDo: receber por argumento
+        String dir = "/Users/ricardopereira/Desktop/Teste";
+        int port = 9001;
         
         FileManager fm = null;
         try {
-            fm = new FileManager("/Users/ricardopereira/Desktop");
+            fm = new FileManager(dir);
         } catch (FileManager.DirectoryNotFound e) {
             System.out.println(e.getMessage());
         } catch (FileManager.DirectoryInvalid e) {
@@ -39,9 +31,30 @@ public class Main {
             return;
         }
         
-        fm.loadFiles(self.getFiles());
+        RepoController ctrl = null;
+        try {
+            ctrl = new RepoController(InetAddress.getLocalHost().getHostAddress(),port,fm);
+        } catch (UnknownHostException e) {
+            System.err.println("Não foi possível obter o endereço local.");
+        }
+
+        System.out.println("Ficheiros:\n"+ctrl.getRepository().toString());
         
-        System.out.println(self.toString());
+        if (ctrl == null)
+            return;
+                
+        System.out.println("À procura do servidor\n...");
+        // Procura o servidor
+        if (ctrl.findServer()) {
+            System.out.println("Iniciar ligação com: "+ctrl.getServerAddress()+":"+ctrl.getServerPort());
+        }
+        else
+            System.out.println("Nenhum servidor encontrado.");
+        
+        // Iniciar recepção de clientes
+        //(Bloqueante)
+        ctrl.startListeningClients();
+        System.out.println("Repositório vai terminar...");
     }
-    
+
 }
