@@ -19,7 +19,7 @@ import tests.SimulateFileChangeThread;
 
 /**
  * ClientThread classe.
- * Thread responsável pela interacção com um cliente ligado.
+ * Thread do Servidor responsável pela interacção com um cliente ligado.
  * 
  * @author Team
  */
@@ -82,7 +82,7 @@ public class ClientThread extends Thread {
             // Enviar lista de ficheiros inicial
             fileChangedEvent();
             
-            // Debug: Simulador de alterações de ficheiros
+            // Teste: Simulador de alterações de ficheiros
             new SimulateFileChangeThread(this).start();
             
             // ToDo
@@ -93,7 +93,7 @@ public class ClientThread extends Thread {
                     ois = new ObjectInputStream(socket.getInputStream());
                     oos = new ObjectOutputStream(socket.getOutputStream());
 
-                    // Obtem request do utilizador
+                    // Obtem pedido do utilizador
                     Request req = (Request) ois.readObject();
                     
                     if (req == null) { //EOF

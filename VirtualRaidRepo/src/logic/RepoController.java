@@ -3,7 +3,6 @@ package logic;
 import classes.Common;
 import classes.FileManager;
 import classes.Repository;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
@@ -12,7 +11,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 
 /**
  * RepoController classe.
@@ -132,11 +130,10 @@ public class RepoController {
             }
 
             try {
-                clientSocket.setSoTimeout(TIMEOUT*1000);
+                clientSocket.setSoTimeout(TIMEOUT * 1000);
                 System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
                 // Inicia thread para o cliente
-                
-                //new ClientThread(clientSocket, getAllFiles()).start();
+                new ClientThread(clientSocket, fileManager).start();
             } catch (IOException e) {
                 System.out.println("Ocorreu um erro na ligação com o cliente: \n\t" + e);
                 try {

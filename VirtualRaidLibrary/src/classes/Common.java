@@ -11,4 +11,6 @@ public class Common {
     
     public static final int UDPOBJECT_MAX_SIZE = 1000;
     
+    public static final int FILECHUNK_MAX_SIZE = 4000;
+    
 }

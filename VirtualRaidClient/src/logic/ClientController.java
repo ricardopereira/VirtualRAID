@@ -1,5 +1,7 @@
 package logic;
 
+import classes.Common;
+import classes.FileManager;
 import classes.FilesList;
 import classes.Login;
 import classes.Request;
@@ -7,9 +9,12 @@ import classes.Response;
 import classes.VirtualFile;
 import enums.RequestType;
 import enums.ResponseType;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -23,17 +28,20 @@ import java.net.UnknownHostException;
  */
 public class ClientController {
     // Constantes
-    public static final int MAX_SIZE = 4000;
-    public static final int TIMEOUT = 30; //Segundos
+    public static final int TIMEOUT_AUTH = 30; //Segundos
+    public static final int TIMEOUT = 6; //Segundos
         
     // Servidor principal
     private Socket mainSocket;
     
     private boolean isAuthenticated = false;
-    private String localFilesDirectory;
     private volatile FilesList filesList = new FilesList(); //Remote files list
     private ResponsesManager responsesManagerThread;
     private ClientListener clientListener;
+    
+    // Ficheiros locais
+    private String localFilesDirectory;
+    private FileManager localFilesManager = null;
     
     public ClientController(String dir) {
         this.localFilesDirectory = dir;
@@ -166,24 +174,87 @@ public class ClientController {
     }
     
     private void downloadFile(String repositoryAddress, int port, VirtualFile file) {
-        if (file == null)
+        if (file == null) {
             return;
+        }
+        
+        if (localFilesManager == null) {
+            performFilesError("Não foi especificado uma directoria de ficheiros");
+            return;
+        }
 
         // Repositórios
-        Socket tempSocket;
-        byte []fileChunck = new byte[MAX_SIZE];
+        Socket tempSocket = null;
+        FileOutputStream localFileOutputStream = null;
+        ObjectOutputStream oout;
+        InputStream in;
+        byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;                
         int index = 0;
         
-        performDownloadStarted("Downloading a file...");
-        
-        // Recebe ficheiro por blocos
-        //while ((nbytes = in.read(fileChunck)) > 0) {
-            //System.out.println("Recebido o bloco n. " + ++index + " com " + nbytes + " bytes.");
-            //localFileOutputStream.write(fileChunck, 0, nbytes);                 
-        //}
-        
-        performDownloadFinished();
+        try {            
+            // Ligar ao repositório
+            try {
+                tempSocket = new Socket(InetAddress.getByName(repositoryAddress), port);
+                tempSocket.setSoTimeout(TIMEOUT * 1000);
+
+                in = tempSocket.getInputStream();
+                oout = new ObjectOutputStream(tempSocket.getOutputStream());
+
+                oout.writeObject(new Request(file, RequestType.REQ_DOWNLOAD));
+                oout.flush();
+                
+                if ((nbytes = in.read(fileChunck)) > 0) {
+                    // Criar FileStream para receber o ficheiro
+                    try {
+                        localFileOutputStream = new FileOutputStream(localFilesManager.getCurrentDirectoryPath() + file.getName());
+                        performOperationStarted("Iniciar transferência de "+file.getName());
+                    } catch (IOException e) {
+                        performFilesError("Não foi possível criar o ficheiro "+localFilesManager.getCurrentDirectoryPath() + file.getName());
+                        return;
+                    }
+                    
+                    // First chunk
+                    localFileOutputStream.write(fileChunck, 0, nbytes);
+                    performOperationProgress(nbytes);
+                        
+                    // Receber o ficheiro
+                    while ((nbytes = in.read(fileChunck)) > 0) {
+                        localFileOutputStream.write(fileChunck, 0, nbytes); 
+                        performOperationProgress(nbytes);
+                    }
+                }
+                else {
+                    performOperationFinished("Ficheiro não está disponível.");
+                }
+            } catch (UnknownHostException e) {
+                System.out.println("Destino desconhecido:\n\t" + e);
+            } catch (NumberFormatException e) {
+                System.out.println("O porto do servidor deve ser um inteiro positivo:\n\t" + e);
+            } catch (SocketTimeoutException e) {
+                System.out.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+            } catch (SocketException e) {
+                System.out.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
+            }
+            // Terminou a transferência
+            performOperationFinished("Concluido");
+        } finally {
+            if (tempSocket != null) {
+                try {
+                    tempSocket.close();
+                } catch (IOException e) {
+                }
+            }
+
+            if (localFileOutputStream != null) {
+                try {
+                    localFileOutputStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
     
     private void uploadFile(String repositoryAddress, int port, VirtualFile file) {
@@ -208,7 +279,7 @@ public class ClientController {
         if (res == null)
             return;
         
-        // Só inicia o download ou upload se a resposta do servidor for positivo
+        // Só inicia o download ou upload se a resposta do servidor for positiva
         if (res.getStatus() != ResponseType.RES_OK) {
             performResponseError(res.getStatus());
         }
@@ -245,29 +316,51 @@ public class ClientController {
         if (clientListener != null)
             clientListener.onFilesListChanged(filesList);
     }
+    
+    private void performFilesError(String message) {
+        if (clientListener != null)
+            clientListener.onFilesError(message);
+    }
 
     private void performResponseError(ResponseType status) {
         if (clientListener != null)
             clientListener.onResponseError(status);
     }
 
-    private void performDownloadStarted(String fileName) {
+    private void performOperationStarted(String fileName) {
         if (clientListener != null)
-            clientListener.onDownloadStarted(fileName);
+            clientListener.onOperationStarted(fileName);
     }
 
-    private void performDownloadProgress(int nbytes) {
+    private void performOperationProgress(int nbytes) {
         if (clientListener != null)
-            clientListener.onDownloadProgress(nbytes);
+            clientListener.onOperationProgress(nbytes);
     }
     
-    private void performDownloadFinished() {
+    private void performOperationFinished(String message) {
         if (clientListener != null)
-            clientListener.onDownloadFinished();
+            clientListener.onOperationFinished(message);
     }
     
     public void setClientListener(ClientListener listener) {
         clientListener = listener;
     }
-    
+
+    public String getLocalFilesDirectory() {
+        return localFilesDirectory;
+    }
+
+    public void setLocalFilesDirectory(String localFilesDirectory) {
+        this.localFilesDirectory = localFilesDirectory;
+        try {
+            localFilesManager = new FileManager(localFilesDirectory);
+        } catch (FileManager.DirectoryNotFound e) {
+            performFilesError(e.getMessage());
+        } catch (FileManager.DirectoryInvalid e) {
+            performFilesError(e.getMessage());
+        } catch (FileManager.DirectoryNoPermissions e) {
+            performFilesError(e.getMessage());
+        }
+    }
+ 
 }

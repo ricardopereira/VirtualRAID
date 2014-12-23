@@ -125,7 +125,7 @@ public class ServerController implements Runnable {
         
         // Repositório 001 se conectou!
         teste.add(r001);
-        r001.getFiles().add(new RepositoryFile("Motocross.avi",1024,new Date()));
+        r001.getFiles().add(new RepositoryFile("Screen Shot 2014-11-28 at 02.42.19.png",1024,new Date()));
         r001.getFiles().add(new RepositoryFile("HannaMontana.avi",1024,new Date()));
         r001.getFiles().add(new RepositoryFile("PowerRangers.avi",3024,new Date()));
         r001.getFiles().add(new RepositoryFile("DragonBall.avi",1024,new Date()));

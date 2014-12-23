@@ -67,7 +67,7 @@ public class RepositoriesThread extends Thread {
                     if (obj != null && obj instanceof Heartbeat) {
                         
                         // Teste
-                        System.out.println(packet.getAddress().getHostAddress()+" - total conexões: "+((Heartbeat) obj).getCurrentConnections());
+                        //System.out.println(packet.getAddress().getHostAddress()+" - total conexões: "+((Heartbeat) obj).getCurrentConnections());
                     }
                     
                     // ToDo: lista de ficheiros
