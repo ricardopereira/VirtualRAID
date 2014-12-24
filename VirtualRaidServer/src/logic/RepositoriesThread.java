@@ -3,13 +3,10 @@ package logic;
 import classes.Common;
 import classes.Heartbeat;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 
 /**
@@ -67,7 +64,7 @@ public class RepositoriesThread extends Thread {
                     if (obj != null && obj instanceof Heartbeat) {
                         
                         // Teste
-                        //System.out.println(packet.getAddress().getHostAddress()+" - total conexões: "+((Heartbeat) obj).getCurrentConnections());
+                        System.out.println(packet.getAddress().getHostAddress()+" - total conexões: "+((Heartbeat) obj).getCurrentConnections());
                     }
                     
                     // ToDo: lista de ficheiros

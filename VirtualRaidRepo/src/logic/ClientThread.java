@@ -21,6 +21,7 @@ public class ClientThread extends Thread {
     
     private final Socket socket;
     private final FileManager fileManager;
+    private ClientListener clientListener;
     
     public ClientThread(Socket socket, FileManager fileManager) {
         this.socket = socket;
@@ -33,6 +34,7 @@ public class ClientThread extends Thread {
         OutputStream out;
         ObjectInputStream ois;
         
+        performConnectedClient();
         try {
             ois = new ObjectInputStream(socket.getInputStream());
             out = socket.getOutputStream();
@@ -59,6 +61,7 @@ public class ClientThread extends Thread {
         } catch (IOException e) {
             System.out.println("Ocorreu a excepcao de E/S:\n\t" + e);
         } finally {
+            performClosingClient();
             try {
                 socket.close();
             } catch (IOException e) {}
@@ -78,6 +81,11 @@ public class ClientThread extends Thread {
             while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
                 out.write(fileChunck, 0, nbytes);
                 out.flush();
+                try {
+                    // Teste
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                }
             }
         } catch (FileNotFoundException e) {
             System.out.println("Ficheiro " + fileManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
@@ -93,6 +101,20 @@ public class ClientThread extends Thread {
             return;
         
         
+    }
+    
+    private void performConnectedClient() {
+        if (clientListener != null)
+            clientListener.onConnectedClient();
+    }
+    
+    private void performClosingClient() {
+        if (clientListener != null)
+            clientListener.onClosingClient();
+    }
+    
+    public void setClientListener(ClientListener listener) {
+        clientListener = listener;
     }
     
 }

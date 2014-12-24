@@ -29,13 +29,15 @@ public class RepoController {
     private MulticastThread multicastThread;
     // HeartBeat e lista de ficheiros
     private HeartbeatThread heartbeatThread;
+    
     private DatagramSocket heartbeatSocket;
     private String serverAddress;
     private int serverPort;
-    
+
     private final Repository self;
     private final int port;
     private final FileManager fileManager;
+    private int currentConnections;
     
     public RepoController(String host, int listenPort, FileManager fm) {
         this.port = listenPort;
@@ -108,6 +110,7 @@ public class RepoController {
             processClientRequests();
         } finally {
             multicastThread.interrupt();
+            heartbeatThread.interrupt();
             // Fecha o socket do servidor
             try {
                 mainSocket.close();
@@ -132,10 +135,26 @@ public class RepoController {
             try {
                 clientSocket.setSoTimeout(TIMEOUT * 1000);
                 System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
-                // Inicia thread para o cliente
-                new ClientThread(clientSocket, fileManager).start();
+                // Cria thread para o cliente
+                ClientThread clientThread = new ClientThread(clientSocket, fileManager);                
+                clientThread.setClientListener(new ClientListener() {
+
+                    @Override
+                    public void onConnectedClient() {
+                        incrementCurrentConnections();
+                    }
+
+                    @Override
+                    public void onClosingClient() {
+                        decrementCurrentConnections();
+                    }
+                
+                });
+                // Inicia thread
+                clientThread.start();
             } catch (IOException e) {
                 System.out.println("Ocorreu um erro na ligação com o cliente: \n\t" + e);
+                // Fecha socket do client
                 try {
                     clientSocket.close();
                 } catch (IOException s) {/*Silencio*/}
@@ -156,4 +175,17 @@ public class RepoController {
     public DatagramSocket getHeartbeatSocket() {
         return heartbeatSocket;
     }
+
+    public synchronized int getCurrentConnections() {
+        return currentConnections;
+    }
+    
+    private synchronized void incrementCurrentConnections() {
+        currentConnections++;
+    }
+    
+    private synchronized void decrementCurrentConnections() {
+        currentConnections--;
+    }
+
 }

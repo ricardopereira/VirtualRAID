@@ -8,8 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * HeartbeatThread classe.
@@ -49,8 +47,11 @@ public class HeartbeatThread extends Thread {
                 
                 buff = new ByteArrayOutputStream();
                 out = new ObjectOutputStream(buff);
-                // Teste
-                out.writeObject(new Heartbeat(7));
+                
+                // Número de ligações
+                Heartbeat heartbeat = new Heartbeat(ctrl.getCurrentConnections());
+                        
+                out.writeObject(heartbeat);
                 out.flush();
                 out.close();
 

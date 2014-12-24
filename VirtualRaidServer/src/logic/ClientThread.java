@@ -83,9 +83,9 @@ public class ClientThread extends Thread {
             fileChangedEvent();
             
             // Teste: Simulador de alterações de ficheiros
-            new SimulateFileChangeThread(this).start();
+            //new SimulateFileChangeThread(this).start();
             
-            // ToDo
+            // ToDo: para já, autenticação sem TimeOut
             socket.setSoTimeout(0);
             
             if (authenticated) {
