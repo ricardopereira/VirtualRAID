@@ -3,14 +3,18 @@ package logic;
 import classes.Common;
 import classes.FileManager;
 import classes.Repository;
+import classes.RepositoryFile;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 /**
  * RepoController classe.
@@ -26,7 +30,7 @@ public class RepoController {
     // Ligação dos Clientes
     private ServerSocket mainSocket;
     // Multicast para receber um pedido de remoção de uma ficheiro
-    private MulticastThread multicastThread;
+    private DeleteThread deleteThread;
     // HeartBeat e lista de ficheiros
     private HeartbeatThread heartbeatThread;
     
@@ -51,6 +55,10 @@ public class RepoController {
     
     public Repository getRepository() {
         return self;
+    }
+    
+    public ArrayList<RepositoryFile> getFiles() {
+        return self.getFiles();
     }
     
     public boolean findServer() {
@@ -97,9 +105,12 @@ public class RepoController {
             return;
         }
         
+        // Enviar a primeira lista de ficheiros ao servidor
+        filesChangedEvent();
+        
         // Thread para receber um pedido DeleteFile
-        multicastThread = new MulticastThread();
-        multicastThread.start();
+        deleteThread = new DeleteThread(this);
+        deleteThread.start();
 
         // Thread para enviar heartbeats
         heartbeatThread = new HeartbeatThread(this);
@@ -109,7 +120,7 @@ public class RepoController {
         try {
             processClientRequests();
         } finally {
-            multicastThread.interrupt();
+            deleteThread.interrupt();
             heartbeatThread.interrupt();
             // Fecha o socket do servidor
             try {
@@ -137,7 +148,7 @@ public class RepoController {
                 System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
                 // Cria thread para o cliente
                 ClientThread clientThread = new ClientThread(clientSocket, fileManager);                
-                clientThread.setClientListener(new ClientListener() {
+                clientThread.setClientListener(new RepoListener() {
 
                     @Override
                     public void onConnectedClient() {
@@ -147,6 +158,14 @@ public class RepoController {
                     @Override
                     public void onClosingClient() {
                         decrementCurrentConnections();
+                    }
+                    
+                    @Override
+                    public void onNewFile(RepositoryFile file) {
+                        // ToDo: Adiciona à lista
+                        getFiles().add(file);
+                        
+                        filesChangedEvent();
                     }
                 
                 });
@@ -172,7 +191,7 @@ public class RepoController {
         return serverPort;
     }
 
-    public DatagramSocket getHeartbeatSocket() {
+    public synchronized DatagramSocket getHeartbeatSocket() {
         return heartbeatSocket;
     }
 
@@ -186,6 +205,39 @@ public class RepoController {
     
     private synchronized void decrementCurrentConnections() {
         currentConnections--;
+    }
+    
+    public void filesChangedEvent() {
+        DatagramPacket packet;
+        ObjectInputStream in;
+        ObjectOutputStream out;
+        Object obj;
+        ByteArrayOutputStream buff;
+        
+        // Utiliza o socket do Heartbeat para enviar a lista de ficheiros
+        try {
+            packet = new DatagramPacket(new byte[Common.UDPOBJECT_MAX_SIZE], Common.UDPOBJECT_MAX_SIZE);
+            packet.setAddress(InetAddress.getByName(getServerAddress()));
+            packet.setPort(getServerPort());
+
+            buff = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(buff);
+
+            out.writeObject(getRepository());
+            out.flush();
+            out.close();
+
+            packet.setData(buff.toByteArray());
+            packet.setLength(buff.size());
+
+            // Envia para o servidor
+            getHeartbeatSocket().send(packet);
+        } catch (IOException e) {
+            // ToDo: melhorar o tratamento de erros
+            if (!getHeartbeatSocket().isClosed()) {
+                getHeartbeatSocket().close();
+            }
+        }
     }
 
 }

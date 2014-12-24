@@ -3,6 +3,7 @@ package logic;
 import classes.Common;
 import classes.FileManager;
 import classes.Request;
+import classes.RepositoryFile;
 import classes.VirtualFile;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,7 +22,7 @@ public class ClientThread extends Thread {
     
     private final Socket socket;
     private final FileManager fileManager;
-    private ClientListener clientListener;
+    private RepoListener clientListener;
     
     public ClientThread(Socket socket, FileManager fileManager) {
         this.socket = socket;
@@ -73,6 +74,11 @@ public class ClientThread extends Thread {
         if (socket == null || file == null)
             return;
         
+        // ToDo: Verificar a situação da lista de ficheiros e o 
+        //VirtualFile vs RepositoryFile
+        
+        // ToDo: Obter ficheiro pelo nome e data modificação
+        
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;
         FileInputStream requestedFileInputStream;
@@ -81,11 +87,11 @@ public class ClientThread extends Thread {
             while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
                 out.write(fileChunck, 0, nbytes);
                 out.flush();
+                
+                // Teste
                 try {
-                    // Teste
                     Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                }
+                } catch (InterruptedException e) {}
             }
         } catch (FileNotFoundException e) {
             System.out.println("Ficheiro " + fileManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
@@ -100,7 +106,16 @@ public class ClientThread extends Thread {
         if (socket == null || file == null)
             return;
         
+        // ToDo
+        //RepositoryFile
         
+        // Done
+        //performNewFile(RepositoryFile file);
+    }
+    
+    private void performNewFile(RepositoryFile file) {
+        if (clientListener != null)
+            clientListener.onNewFile(file);
     }
     
     private void performConnectedClient() {
@@ -113,7 +128,7 @@ public class ClientThread extends Thread {
             clientListener.onClosingClient();
     }
     
-    public void setClientListener(ClientListener listener) {
+    public void setClientListener(RepoListener listener) {
         clientListener = listener;
     }
     

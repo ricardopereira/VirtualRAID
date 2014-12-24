@@ -2,14 +2,11 @@ package logic;
 
 import classes.FilesList;
 import classes.Repository;
-import classes.RepositoryFile;
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * ServerController classe.
@@ -19,9 +16,11 @@ import java.util.Date;
  */
 public class ServerController implements Runnable {
     
+    public static final String FILE_CREDENTIALS = "credenciais.txt";
+    
     // Constantes
     public static final int MAX_SIZE = 4000;
-    public static final int TIMEOUT = 30; //segundos
+    public static final int TIMEOUT_CLIENT = 300; //5 minutos
     
     // Ligação dos Clientes
     private ServerSocket mainSocket;
@@ -32,12 +31,12 @@ public class ServerController implements Runnable {
     
     private int port;
     // Lista de repositórios activos
-    private ArrayList<Repository> repositories;
+    private ArrayList<Repository> activeRepositories;
+    // Lista de clientes activos
+    private ArrayList<ClientThread> activeClients;
     
     public ServerController(int listenPort) {
         this.port = listenPort;
-        // Teste: para efeitos de teste
-        repositories = exemploDeRepositoriosActivos();
     }
     
     public void startListeningClients() {
@@ -57,7 +56,7 @@ public class ServerController implements Runnable {
         multicastThread.start();
         
         // Iniciar recepção de Heartbeats e ficheiros de repositórios
-        repositoriesThread = new RepositoriesThread();
+        repositoriesThread = new RepositoriesThread(this);
         repositoriesThread.start();
 
         // Escuta os clientes
@@ -90,10 +89,35 @@ public class ServerController implements Runnable {
             }
 
             try {
-                clientSocket.setSoTimeout(TIMEOUT*1000);
+                clientSocket.setSoTimeout(TIMEOUT_CLIENT*1000);
+
                 System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
-                // Inicia thread para o cliente
-                new ClientThread(clientSocket, getAllFiles()).start();
+                // Cria thread para o cliente
+                ClientThread clientThread = new ClientThread(clientSocket);
+                clientThread.setServerListener(new ServerListener() {
+
+                    @Override
+                    public void onConnectedClient() {
+                        
+                    }
+
+                    @Override
+                    public void onClosingClient() {
+                        getActiveClients().remove(clientThread);
+                        // Debug
+                        System.out.println("Cliente foi desligado");
+                    }
+
+                    @Override
+                    public FilesList getFilesList() {
+                        return getAllFiles();
+                    }
+                    
+                });
+                // Adiciona o cliente que se ligou
+                getActiveClients().add(clientThread);
+                // Inicia a thread do cliente
+                clientThread.start();
             } catch (IOException e) {
                 System.out.println("Ocorreu um erro na ligação com o cliente: \n\t" + e);
                 try {
@@ -110,35 +134,30 @@ public class ServerController implements Runnable {
         startListeningClients();
     }
     
-    public ArrayList<Repository> getRepositories() {
-        return repositories;
+    public void addActiveRepository(Repository repo) {
+        if (getActiveRepositories().contains(repo)) {
+            getActiveRepositories().remove(repo);
+        }
+        getActiveRepositories().add(repo);
+        
+        //client.filesChangedEvent();
     }
     
-    private ArrayList<Repository> exemploDeRepositoriosActivos() {
-        // Teste
-        ArrayList<Repository> teste = new ArrayList<>();
-        
-        // Repositorio 001
-        Repository r001 = new Repository("192.0.0.1",82640);
-        // Repositorio 002
-        Repository r002 = new Repository("192.0.0.2",27330);
-        
-        // Repositório 001 se conectou!
-        teste.add(r001);
-        r001.getFiles().add(new RepositoryFile("Screen Shot 2014-11-28 at 02.42.19.png",1024,new Date()));
-        r001.getFiles().add(new RepositoryFile("HannaMontana.avi",1024,new Date()));
-        r001.getFiles().add(new RepositoryFile("PowerRangers.avi",3024,new Date()));
-        r001.getFiles().add(new RepositoryFile("DragonBall.avi",1024,new Date()));
-        // Repositório 002 se conectou!
-        teste.add(r002);
-        r002.getFiles().add(new RepositoryFile("HelloKitty.avi",2024,new Date()));
-        
-        return teste;
+    public ArrayList<Repository> getActiveRepositories() {
+        if (activeRepositories == null)
+            activeRepositories = new ArrayList<>();
+        return activeRepositories;
     }
     
+    public synchronized ArrayList<ClientThread> getActiveClients() {
+        if (activeClients == null)
+            activeClients = new ArrayList<>();
+        return activeClients;
+    }
+        
     public FilesList getAllFiles() {
         FilesList allFiles = new FilesList();
-        for (Repository item : repositories) {
+        for (Repository item : getActiveRepositories()) {
             allFiles.addAll(item.getFilesList());
             // ToDo: número de replicas
         }    
