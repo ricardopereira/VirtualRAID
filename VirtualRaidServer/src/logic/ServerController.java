@@ -140,7 +140,13 @@ public class ServerController implements Runnable {
         }
         getActiveRepositories().add(repo);
         
-        //client.filesChangedEvent();
+        // Actualizar os clientes com os ficheiros novos
+        updateClients();
+    }
+    
+    public void updateClients() {
+        for (ClientThread client : getActiveClients())
+            client.filesChangedEvent();
     }
     
     public ArrayList<Repository> getActiveRepositories() {
