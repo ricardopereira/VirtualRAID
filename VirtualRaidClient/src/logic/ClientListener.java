@@ -12,9 +12,10 @@ import enums.ResponseType;
 public interface ClientListener {
     
     void onFilesListChanged(FilesList newFilesList);
+    void onFilesError(String message);
     void onResponseError(ResponseType status);
-    void onDownloadStarted(String fileName);
-    void onDownloadProgress(int nbytes);
-    void onDownloadFinished();
+    void onOperationStarted(String fileName);
+    void onOperationProgress(int nbytes);
+    void onOperationFinished(String message);
     
 }

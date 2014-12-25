@@ -1,18 +1,18 @@
 package logic;
 
+import classes.VirtualFile;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.ServerSocket;
 
 /**
- * MulticastThread classe.
+ * DeleteThread classe.
  * Thread responsável por aceitar pedidos para eliminar ficheiros.
  * 
  * @author Team
  */
-public class MulticastThread extends Thread {
+public class DeleteThread extends Thread {
     
     // Constantes
     public static final String MULTICAST_ADDRESS = "230.30.30.35";
@@ -20,10 +20,12 @@ public class MulticastThread extends Thread {
     public static final String MULTICAST_SECRETKEY = "DeleteFile";
     public static final int MAX_SIZE = 1000;
     
+    private final RepoController ctrl;
     private MulticastSocket msocket;
     private boolean isCanceled = false;
     
-    public MulticastThread() {
+    public DeleteThread(RepoController ctrl) {
+        this.ctrl = ctrl;
         InetAddress group;
         try {
             group = InetAddress.getByName(MULTICAST_ADDRESS);
@@ -59,6 +61,7 @@ public class MulticastThread extends Thread {
                 if (msg.equals(MULTICAST_SECRETKEY)) {
 
                     // ToDo: Delete file
+                    //ctrl.deleteFile
                 }
             }
         } catch (IOException e) {

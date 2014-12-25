@@ -12,7 +12,7 @@ public class Main {
      */
     public static void main(String[] args) {
         // ToDo: receber por argumento
-        String dir = "/Users/ricardopereira/Desktop/Teste";
+        String dir = "/Users/ricardopereira/Desktop/Repo";
         int port = 9001;
         
         FileManager fm = null;
@@ -33,7 +33,7 @@ public class Main {
         
         RepoController ctrl = null;
         try {
-            ctrl = new RepoController(InetAddress.getLocalHost().getHostAddress(),port,fm);
+            ctrl = new RepoController(InetAddress.getLocalHost().getHostAddress(), port, fm);
         } catch (UnknownHostException e) {
             System.err.println("Não foi possível obter o endereço local.");
         }

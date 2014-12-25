@@ -10,13 +10,7 @@ public class Main {
      */
     public static void main(String[] args) {
         // ToDo: receber argumentos
-        ServerController ctrl = new ServerController(9000);
-
-        // Teste: mostra todos os ficheiros de repositórios no ecrã
-        for (Repository item : ctrl.getRepositories()) {
-            System.out.println(item.toString());
-        }
-        
+        ServerController ctrl = new ServerController(9000);        
         System.out.println("Servidor de ficheiros iniciado...");
         // Iniciar recepção de clientes
         //(Bloqueante)

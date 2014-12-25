@@ -3,16 +3,18 @@ package logic;
 import classes.Common;
 import classes.FileManager;
 import classes.Repository;
-import java.io.ByteArrayInputStream;
+import classes.RepositoryFile;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 /**
  * RepoController classe.
@@ -28,16 +30,18 @@ public class RepoController {
     // Ligação dos Clientes
     private ServerSocket mainSocket;
     // Multicast para receber um pedido de remoção de uma ficheiro
-    private MulticastThread multicastThread;
+    private DeleteThread deleteThread;
     // HeartBeat e lista de ficheiros
     private HeartbeatThread heartbeatThread;
+    
     private DatagramSocket heartbeatSocket;
     private String serverAddress;
     private int serverPort;
-    
+
     private final Repository self;
     private final int port;
     private final FileManager fileManager;
+    private int currentConnections;
     
     public RepoController(String host, int listenPort, FileManager fm) {
         this.port = listenPort;
@@ -51,6 +55,10 @@ public class RepoController {
     
     public Repository getRepository() {
         return self;
+    }
+    
+    public ArrayList<RepositoryFile> getFiles() {
+        return self.getFiles();
     }
     
     public boolean findServer() {
@@ -97,9 +105,12 @@ public class RepoController {
             return;
         }
         
+        // Enviar a primeira lista de ficheiros ao servidor
+        filesChangedEvent();
+        
         // Thread para receber um pedido DeleteFile
-        multicastThread = new MulticastThread();
-        multicastThread.start();
+        deleteThread = new DeleteThread(this);
+        deleteThread.start();
 
         // Thread para enviar heartbeats
         heartbeatThread = new HeartbeatThread(this);
@@ -109,7 +120,8 @@ public class RepoController {
         try {
             processClientRequests();
         } finally {
-            multicastThread.interrupt();
+            deleteThread.interrupt();
+            heartbeatThread.interrupt();
             // Fecha o socket do servidor
             try {
                 mainSocket.close();
@@ -132,13 +144,36 @@ public class RepoController {
             }
 
             try {
-                clientSocket.setSoTimeout(TIMEOUT*1000);
+                clientSocket.setSoTimeout(TIMEOUT * 1000);
                 System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
-                // Inicia thread para o cliente
+                // Cria thread para o cliente
+                ClientThread clientThread = new ClientThread(clientSocket, fileManager);                
+                clientThread.setClientListener(new RepoListener() {
+
+                    @Override
+                    public void onConnectedClient() {
+                        incrementCurrentConnections();
+                    }
+
+                    @Override
+                    public void onClosingClient() {
+                        decrementCurrentConnections();
+                    }
+                    
+                    @Override
+                    public void onNewFile(RepositoryFile file) {
+                        // ToDo: Adiciona à lista
+                        getFiles().add(file);
+                        
+                        filesChangedEvent();
+                    }
                 
-                //new ClientThread(clientSocket, getAllFiles()).start();
+                });
+                // Inicia thread
+                clientThread.start();
             } catch (IOException e) {
                 System.out.println("Ocorreu um erro na ligação com o cliente: \n\t" + e);
+                // Fecha socket do client
                 try {
                     clientSocket.close();
                 } catch (IOException s) {/*Silencio*/}
@@ -156,7 +191,53 @@ public class RepoController {
         return serverPort;
     }
 
-    public DatagramSocket getHeartbeatSocket() {
+    public synchronized DatagramSocket getHeartbeatSocket() {
         return heartbeatSocket;
     }
+
+    public synchronized int getCurrentConnections() {
+        return currentConnections;
+    }
+    
+    private synchronized void incrementCurrentConnections() {
+        currentConnections++;
+    }
+    
+    private synchronized void decrementCurrentConnections() {
+        currentConnections--;
+    }
+    
+    public void filesChangedEvent() {
+        DatagramPacket packet;
+        ObjectInputStream in;
+        ObjectOutputStream out;
+        Object obj;
+        ByteArrayOutputStream buff;
+        
+        // Utiliza o socket do Heartbeat para enviar a lista de ficheiros
+        try {
+            packet = new DatagramPacket(new byte[Common.UDPOBJECT_MAX_SIZE], Common.UDPOBJECT_MAX_SIZE);
+            packet.setAddress(InetAddress.getByName(getServerAddress()));
+            packet.setPort(getServerPort());
+
+            buff = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(buff);
+
+            out.writeObject(getRepository());
+            out.flush();
+            out.close();
+
+            packet.setData(buff.toByteArray());
+            packet.setLength(buff.size());
+
+            // Envia para o servidor
+            getHeartbeatSocket().send(packet);
+        } catch (IOException e) {
+            // ToDo: melhorar o tratamento de erros
+            if (!getHeartbeatSocket().isClosed()) {
+                getHeartbeatSocket().close();
+            }
+        }
+    }
+
 }

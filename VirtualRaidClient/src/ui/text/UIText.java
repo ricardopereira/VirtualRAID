@@ -35,7 +35,7 @@ public class UIText {
     public void startInterface() {
         // Verificar se está ligado ao servidor
         if (!ctrl.getIsConnected()) {
-            // Teste: falta os argumentos para o endereço e porta do servidor
+            // ToDo: falta os argumentos para o endereço e porta do servidor
             if (ctrl.connectToServer("127.0.0.1",9000)) {
                 System.out.println("Ligado ao servidor principal...");
             }
@@ -44,6 +44,9 @@ public class UIText {
                 return;
             }
         }
+        
+        // ToDo
+        ctrl.setLocalFilesDirectory("/Users/ricardopereira/Desktop/Client");
         
         // Verificar se está autenticado
         while (!ctrl.getIsAuthenticated()) {
@@ -78,7 +81,7 @@ public class UIText {
             // Tem acção pendente, ou seja, está a fazer download ou upload
             //e dar possibilidade de cancelar...
             do {
-                System.out.println("Enter key "+APP_DONE+" to cancel: ");
+                System.out.println("Prima a tecla "+APP_DONE+" para cancelar: ");
                 opt = getOptionNumber();
             } while (opt != APP_DONE && hasPendingRequest);
             
@@ -88,7 +91,7 @@ public class UIText {
         else {
             // Escolha da opção do Menu...
             do {
-                System.out.println(" Option: ");
+                System.out.println(" Opção: ");
                 opt = getOptionNumber();
             } while (opt < APP_EXIT || opt > 3);
         }
@@ -102,7 +105,7 @@ public class UIText {
 
         switch (currentMenuOption) {
             case OPT_DOWNLOAD:
-                System.out.println("Choose file to download: ");
+                System.out.println("Escolha o ficheiro para fazer download: ");
                 // Obter o índice do ficheiro
                 opt = getOptionNumber();
                 
@@ -112,7 +115,7 @@ public class UIText {
                 if (opt >= 0 && opt < ctrl.getFilesList().size()) {
                     // Criar cópia do registo para evitar problemas com as threads
                     VirtualFile choosedFile = new VirtualFile(ctrl.getFilesList().get(opt));
-                    System.out.println("Start download of:\n\t" + choosedFile.toString());
+                    System.out.println("Iniciar transferencia de :\n\t" + choosedFile.toString());
                     
                     // RP: pensar no caso em que um cliente escolheu um ficheiro
                     //mas ainda não se iniciou o download e outro cliente
@@ -121,35 +124,35 @@ public class UIText {
                     ctrl.requestDownloadFile(choosedFile);
                     hasPendingRequest = true;
                     
-                    System.out.println("Checking if file is available...");
+                    System.out.println("A verificar se o ficheiro existe...");
                 }
                 else {
-                    System.out.println("File don't exist.\n");
+                    System.out.println("O ficheiro não existe.\n");
                     currentMenuOption = MenuOptions.OPT_NONE;
                 }
                 break;
             case OPT_UPLOAD:
-                System.out.println("Choose file to upload: ");
+                System.out.println("Escolha o ficheiro para fazer upload: ");
                 // Obter o índice do ficheiro
                 opt = getOptionNumber();
                 
                 // ToDo
 
-                System.out.println("File uploaded.\n");
+                System.out.println("Ficheiro enviado.\n");
                 currentMenuOption = MenuOptions.OPT_NONE;
                 break;
             case OPT_DELETE:
-                System.out.println("Choose file to delete: ");
+                System.out.println("Escolha o ficheiro para eliminar: ");
                 // Obter o índice do ficheiro
                 opt = getOptionNumber();
                 
                 // ToDo
 
-                System.out.println("File deleted.\n");
+                System.out.println("Ficheiro eliminado.\n");
                 currentMenuOption = MenuOptions.OPT_NONE;
                 break;
             default:
-                System.out.println("Closing...");
+                System.out.println("Adeus...");
                 break;
         }            
 
@@ -183,10 +186,10 @@ public class UIText {
     
     private void printMenuOptions() {
         System.out.println("MENU:");
-        System.out.println(" "+APP_EXIT+". Exit");
-        System.out.println(" 1. Download file");
-        System.out.println(" 2. Upload file");
-        System.out.println(" 3. Delete file");
+        System.out.println(" "+APP_EXIT+". Sair");
+        System.out.println(" 1. Download ficheiro");
+        System.out.println(" 2. Upload ficheiro");
+        System.out.println(" 3. Delete ficheiro");
     }
     
     private void printCurrentInterface() {
@@ -194,7 +197,7 @@ public class UIText {
         printCurrentInterface(true);
     }
     
-    private void printCurrentInterface(boolean printChooseOption) {        
+    private void printCurrentInterface(boolean printChooseOption) {
         if (hasPendingRequest) {
             // Tem acção pendente, ou seja, está a fazer download ou upload...
             printPendingRequest(printChooseOption);
@@ -209,27 +212,27 @@ public class UIText {
         // Se tiver opção seleccionada...
         switch (currentMenuOption) {
             case OPT_DOWNLOAD:
-                System.out.println("File available.");
+                
                 break;
             case OPT_UPLOAD:
-                System.out.println("Upload permited.");
+                
                 break;
             default:
-                System.out.println("DEBUG: printCurrentInterface - Algo correu mal...");
+                System.out.println("[DEBUG] printPendingRequest: algo correu mal...");
                 break;
         }
         if (printCancelOption)
-            System.out.println(" Input key "+APP_DONE+" to cancel: ");
+            System.out.println(" Prima a tecla "+APP_DONE+" para cancelar: ");
     }
     
     private void printPendingChoice(boolean printChooseOption) {
         // Imprime a lista de ficheiros
-        System.out.println("\nFILES:");
+        System.out.println("\nFICHEIROS:");
         if (ctrl.canUseFilesList()) {
             System.out.println(ctrl.getFilesList().toString());
         }
         else {
-            System.out.println("List file is empty.\n");
+            System.out.println("Lista de ficheiros vazia.\n");
         }
 
         // Só imprime o Menu se não seleccionou nenhuma opção
@@ -242,18 +245,18 @@ public class UIText {
         if (currentMenuOption != MenuOptions.OPT_NONE) {
             switch (currentMenuOption) {
                 case OPT_DOWNLOAD:
-                    System.out.println("Choose file to download: ");
+                    System.out.println("Escolha o ficheiro para fazer download: ");
                     break;
                 case OPT_UPLOAD:
-                    System.out.println("Choose file to upload: ");
+                    System.out.println("Escolha o ficheiro para fazer upload: ");
                     break;
                 case OPT_DELETE:
-                    System.out.println("Choose file to delete: ");
+                    System.out.println("Escolha o ficheiro para eliminar: ");
                     break;
             }       
         }
         else if (printChooseOption) {
-            System.out.println(" Option: ");
+            System.out.println(" Opcao: ");
         }
     }
     
@@ -265,24 +268,37 @@ public class UIText {
         }
         
         @Override
-        public void onResponseError(ResponseType status) {
-            
+        public void onFilesError(String message) {
+            System.out.println("Erro:\n\t"+message);
+            restoreInterface();
         }
         
         @Override
-        public void onDownloadStarted(String fileName) {
+        public void onResponseError(ResponseType status) {
+            System.out.println("Erro:\n\t"+ResponseType.labels[status.ordinal()]);
+            restoreInterface();
+        }
+        
+        @Override
+        public void onOperationStarted(String fileName) {
             System.out.println(fileName);
         }
         
         @Override
-        public void onDownloadProgress(int nbytes) {
-            
+        public void onOperationProgress(int nbytes) {
+            System.out.println("Transferido... "+nbytes);
         }
         
         @Override
-        public void onDownloadFinished() {
-            System.out.println("Done");
-            System.out.println("Input 9 to return to menu: ");
+        public void onOperationFinished(String message) {
+            System.out.println(message);
+            restoreInterface();
+        }
+        
+        private void restoreInterface() {
+            if (hasPendingRequest) {
+                System.out.println("Prima a tecla 9 para voltar ao menu: ");                
+            }
             hasPendingRequest = false;
             currentMenuOption = MenuOptions.OPT_NONE;
         }

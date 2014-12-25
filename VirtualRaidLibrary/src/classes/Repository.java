@@ -28,6 +28,16 @@ public class Repository implements Serializable {
         return sb.toString();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj instanceof Repository) {
+            return (((Repository) obj).address.equals(this.address));
+        }
+        return false;
+    }
+    
     /**
      * @return the address
      */
@@ -59,7 +69,7 @@ public class Repository implements Serializable {
     /**
      * @return the files
      */
-    public ArrayList<RepositoryFile> getFiles() {
+    public synchronized ArrayList<RepositoryFile> getFiles() {
         return files;
     }
     
