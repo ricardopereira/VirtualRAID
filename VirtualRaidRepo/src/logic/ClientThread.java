@@ -4,13 +4,19 @@ import classes.Common;
 import classes.FileManager;
 import classes.Request;
 import classes.RepositoryFile;
+import classes.Response;
 import classes.VirtualFile;
+import enums.ResponseType;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Date;
 
 /**
  * ClientThread classe.
@@ -21,27 +27,29 @@ import java.net.Socket;
 public class ClientThread extends Thread {
     
     private final Socket socket;
-    private final FileManager fileManager;
+    private final FileManager filesManager;
     private RepoListener clientListener;
     
-    public ClientThread(Socket socket, FileManager fileManager) {
+    public ClientThread(Socket socket, FileManager filesManager) {
         this.socket = socket;
-        this.fileManager = fileManager;
+        this.filesManager = filesManager;
     }
     
     @Override
     public void run() {
         Request req;
         OutputStream out;
-        ObjectInputStream ois;
+        ObjectInputStream oin;
+        ObjectOutputStream oout;
         
         performConnectedClient();
         try {
-            ois = new ObjectInputStream(socket.getInputStream());
             out = socket.getOutputStream();
+            oout = new ObjectOutputStream(out);
+            oin = new ObjectInputStream(socket.getInputStream());
 
             // Obtem pedido do utilizador
-            req = (Request) ois.readObject();
+            req = (Request) oin.readObject();
             
             if (req == null) { //EOF
                 // Para terminar a thread
@@ -54,7 +62,13 @@ public class ClientThread extends Thread {
                     sendFile(req.getFile(), out);
                     break;
                 case REQ_UPLOAD:
-                    receiveFile(req.getFile());
+                    // Aceita o pedido
+                    oout.writeObject(new Response(ResponseType.RES_OK, null, req));
+                    oout.flush();
+                    
+                    // ToDo: verificar se o ficheiro já existe
+                    
+                    receiveFile(req.getFile(), (InputStream) oin);
                     break;
             }
         } catch (ClassNotFoundException e) {            
@@ -81,36 +95,62 @@ public class ClientThread extends Thread {
         
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;
+        
         FileInputStream requestedFileInputStream;
         try {
-            requestedFileInputStream = new FileInputStream(fileManager.getCurrentDirectoryPath() + file.getName());
+            requestedFileInputStream = new FileInputStream(filesManager.getCurrentDirectoryPath() + file.getName());
             while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
                 out.write(fileChunck, 0, nbytes);
                 out.flush();
-                
-                // Teste
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {}
             }
         } catch (FileNotFoundException e) {
-            System.out.println("Ficheiro " + fileManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
+            System.out.println("Ficheiro " + filesManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
         } catch(IOException e) {
             System.out.println("Ocorreu a excepcao de E/S:\n\t" + e);
         }
         System.out.println("Transferencia concluida");
     }
     
-    public void receiveFile(VirtualFile file)
+    public void receiveFile(VirtualFile file, InputStream in)
     {
         if (socket == null || file == null)
             return;
         
-        // ToDo
-        //RepositoryFile
+        FileOutputStream localFileOutputStream = null;
+        byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
+        int nbytes;
+
+        try {
+            if ((nbytes = in.read(fileChunck)) > 0) {
+                // Criar FileStream para receber o ficheiro
+                try {
+                    localFileOutputStream = new FileOutputStream(filesManager.getCurrentDirectoryPath() + file.getName());
+                } catch (IOException e) {
+                    System.out.println("Não foi possível criar o ficheiro "+filesManager.getCurrentDirectoryPath() + file.getName());
+                    return;
+                }
+                
+                System.out.println("A receber ficheiro "+file.getName());
+                // First chunk
+                localFileOutputStream.write(fileChunck, 0, nbytes); 
+                // Receber o ficheiro
+                while ((nbytes = in.read(fileChunck)) > 0) {
+                    localFileOutputStream.write(fileChunck, 0, nbytes);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Erro de E/S:\n\t"+e);
+        } finally {
+            if (localFileOutputStream != null) {
+                try {
+                    localFileOutputStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
         
-        // Done
-        //performNewFile(RepositoryFile file);
+        // ToDo: tamanho do ficheiro
+        performNewFile(new RepositoryFile(file.getName(), 0, new Date()));
     }
     
     private void performNewFile(RepositoryFile file) {

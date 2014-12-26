@@ -4,6 +4,7 @@ import classes.FilesList;
 import classes.Login;
 import classes.VirtualFile;
 import enums.ResponseType;
+import java.util.Date;
 import java.util.Scanner;
 import logic.ClientController;
 import logic.ClientListener;
@@ -137,9 +138,9 @@ public class UIText {
                 opt = getOptionNumber();
                 
                 // ToDo
-
-                System.out.println("Ficheiro enviado.\n");
-                currentMenuOption = MenuOptions.OPT_NONE;
+                ctrl.requestUploadFile(new VirtualFile("ScreenShot2014.png", 1000, new Date()));
+                hasPendingRequest = true;
+                
                 break;
             case OPT_DELETE:
                 System.out.println("Escolha o ficheiro para eliminar: ");
@@ -147,9 +148,9 @@ public class UIText {
                 opt = getOptionNumber();
                 
                 // ToDo
-
-                System.out.println("Ficheiro eliminado.\n");
-                currentMenuOption = MenuOptions.OPT_NONE;
+                ctrl.requestDeleteFile(new VirtualFile("ScreenShot2014.png", 1000, new Date()));
+                hasPendingRequest = true;
+                
                 break;
             default:
                 System.out.println("Adeus...");

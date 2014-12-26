@@ -7,13 +7,17 @@ import classes.Login;
 import classes.Request;
 import classes.Response;
 import classes.VirtualFile;
+import com.sun.xml.internal.ws.api.message.Packet;
 import enums.RequestType;
 import enums.ResponseType;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -173,6 +177,44 @@ public class ClientController {
         return ResponseType.RES_OK;
     }
     
+    public ResponseType requestUploadFile(VirtualFile file) {
+        if (!getIsAuthenticated())
+            return ResponseType.RES_FAILED;
+        
+        if (file == null)
+            return ResponseType.RES_FAILED;
+        
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(mainSocket.getOutputStream());
+            // Envia pedido de upload
+            oos.writeObject(new Request(file, RequestType.REQ_UPLOAD));
+            oos.flush();
+        } catch (IOException e) {
+            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            return ResponseType.RES_FAILED;
+        }
+        return ResponseType.RES_OK;
+    }
+    
+    public ResponseType requestDeleteFile(VirtualFile file) {
+        if (!getIsAuthenticated())
+            return ResponseType.RES_FAILED;
+        
+        if (file == null)
+            return ResponseType.RES_FAILED;
+        
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(mainSocket.getOutputStream());
+            // Envia pedido de delete
+            oos.writeObject(new Request(file, RequestType.REQ_DELETE));
+            oos.flush();
+        } catch (IOException e) {
+            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            return ResponseType.RES_FAILED;
+        }
+        return ResponseType.RES_OK;
+    }
+    
     private void downloadFile(String repositoryAddress, int port, VirtualFile file) {
         if (file == null) {
             return;
@@ -189,8 +231,7 @@ public class ClientController {
         ObjectOutputStream oout;
         InputStream in;
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
-        int nbytes;                
-        int index = 0;
+        int nbytes;
         
         try {            
             // Ligar ao repositório
@@ -261,20 +302,73 @@ public class ClientController {
         if (file == null)
             return;
         
-        // ToDo
+        if (localFilesManager == null) {
+            performFilesError("Não foi especificado uma directoria de ficheiros");
+            return;
+        }
         
-        return;
+        // Repositórios
+        Socket tempSocket = null;
+        ObjectInputStream oin;
+        ObjectOutputStream oout;
+        byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
+        int nbytes;
+        
+        try {            
+            // Ligar ao repositório
+            try {
+                tempSocket = new Socket(InetAddress.getByName(repositoryAddress), port);
+                tempSocket.setSoTimeout(TIMEOUT * 1000);
+
+                oin = new ObjectInputStream(tempSocket.getInputStream());
+                oout = new ObjectOutputStream(tempSocket.getOutputStream());
+
+                oout.writeObject(new Request(file, RequestType.REQ_UPLOAD));
+                oout.flush();
+                
+                // Verificar a resposta
+                Response res = (Response) oin.readObject();
+                if (res.getStatus() == ResponseType.RES_OK) {
+                    // Iniciar envio do ficheiro
+                    FileInputStream requestedFileInputStream = null;
+                    try {
+                        requestedFileInputStream = new FileInputStream(localFilesManager.getCurrentDirectoryPath() + file.getName());
+                        while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
+                            oout.write(fileChunck, 0, nbytes);
+                            oout.flush();
+                        }
+                    } catch (FileNotFoundException e) {
+                        System.out.println("Ficheiro " + localFilesManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
+                    } finally {
+                        if (requestedFileInputStream != null)
+                            requestedFileInputStream.close();
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+                System.out.println("Não foi recebida a resposta para iniciar o envio do ficheiro:\n\t" + e);
+            } catch (UnknownHostException e) {
+                System.out.println("Destino desconhecido:\n\t" + e);
+            } catch (NumberFormatException e) {
+                System.out.println("O porto do servidor deve ser um inteiro positivo:\n\t" + e);
+            } catch (SocketTimeoutException e) {
+                System.out.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+            } catch (SocketException e) {
+                System.out.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
+            }
+            // Terminou a transferência
+            performOperationFinished("Concluido");
+        } finally {
+            if (tempSocket != null) {
+                try {
+                    tempSocket.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
-    
-    private int deleteFile(VirtualFile file) {
-        if (file == null)
-            return 0;
         
-        // ToDo
-        
-        return 0;
-    }
-    
     public void interpretResponse(Response res) {
         if (res == null)
             return;
@@ -293,7 +387,8 @@ public class ClientController {
                         res.getRequested().getFile());
                     break;
                 case REQ_UPLOAD:
-                    // ToDo
+                    uploadFile(res.getRepositoryAddress(), res.getRepositoryPort(), 
+                        res.getRequested().getFile());
                     break;
             }
         }

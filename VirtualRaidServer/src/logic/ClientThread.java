@@ -95,10 +95,14 @@ public class ClientThread extends Thread {
                             oos.flush();
                             break;
                         case REQ_UPLOAD:
-                            
+                            // ToDo: Verificar o repositório que tem o ficheiro 
+                            //e que está mais livre
+                            oos.writeObject(new Response("127.0.0.1",9001,req));
+                            oos.flush();
                             break;
                         case REQ_DELETE:
                             
+                            // ToDo
                             break;
                     }
                 }
