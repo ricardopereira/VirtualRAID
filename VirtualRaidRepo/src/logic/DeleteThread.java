@@ -1,7 +1,11 @@
 package logic;
 
+import classes.Common;
+import classes.Request;
 import classes.VirtualFile;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -15,10 +19,6 @@ import java.net.MulticastSocket;
 public class DeleteThread extends Thread {
     
     // Constantes
-    public static final String MULTICAST_ADDRESS = "230.30.30.35";
-    public static final int MULTICAST_PORT = 10000;
-    public static final String MULTICAST_SECRETKEY = "DeleteFile";
-    public static final int MAX_SIZE = 1000;
     
     private final RepoController ctrl;
     private MulticastSocket msocket;
@@ -28,11 +28,11 @@ public class DeleteThread extends Thread {
         this.ctrl = ctrl;
         InetAddress group;
         try {
-            group = InetAddress.getByName(MULTICAST_ADDRESS);
-            msocket = new MulticastSocket(MULTICAST_PORT);
+            group = InetAddress.getByName(Common.DELETE_ADDRESS);
+            msocket = new MulticastSocket(Common.DELETE_PORT);
             msocket.joinGroup(group);
         } catch (IOException e) {
-            System.err.println("Não foi possível iniciar MulticastThread:\n\t"+e.getMessage());
+            System.err.println("Não foi possível iniciar DeleteThread:\n\t"+e.getMessage());
             msocket = null;
         }
     }
@@ -46,22 +46,30 @@ public class DeleteThread extends Thread {
             return;
 
         DatagramPacket packet;
-        String msg;
+        ObjectInputStream in;
+        Object obj = null;
 
         try {
             while (!isCanceled) {
-                packet = new DatagramPacket(MULTICAST_SECRETKEY.getBytes(), MULTICAST_SECRETKEY.getBytes().length);
+                packet = new DatagramPacket(new byte[Common.UDPOBJECT_MAX_SIZE], Common.UDPOBJECT_MAX_SIZE);
                 msocket.receive(packet);
+                
+                // Recebe objecto por UDP
+                in = new ObjectInputStream(new ByteArrayInputStream(packet.getData(), 0, packet.getLength()));
+                try {
+                    obj = in.readObject();
+                } catch (ClassNotFoundException e) {
+                    continue;
+                }
+                in.close();
                 
                 if (isCanceled)
                     return;
                 
-                msg = new String(packet.getData(), 0, packet.getLength());
-                                
-                if (msg.equals(MULTICAST_SECRETKEY)) {
-
-                    // ToDo: Delete file
-                    //ctrl.deleteFile
+                if (obj != null && obj instanceof Request) {
+                    // Receber ficheiro para eliminar
+                    Request req = (Request) obj;
+                    ctrl.deleteFile(req.getFile());
                 }
             }
         } catch (IOException e) {

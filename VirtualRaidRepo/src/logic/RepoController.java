@@ -1,10 +1,12 @@
 package logic;
 
+import classes.BaseFile;
 import classes.Common;
 import classes.FileManager;
 import classes.Repository;
 import classes.RepositoryFile;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -209,9 +211,7 @@ public class RepoController {
     
     public void filesChangedEvent() {
         DatagramPacket packet;
-        ObjectInputStream in;
         ObjectOutputStream out;
-        Object obj;
         ByteArrayOutputStream buff;
         
         // Utiliza o socket do Heartbeat para enviar a lista de ficheiros
@@ -237,6 +237,14 @@ public class RepoController {
             if (!getHeartbeatSocket().isClosed()) {
                 getHeartbeatSocket().close();
             }
+        }
+    }
+    
+    public void deleteFile(BaseFile file) {
+        File f = new File(fileManager.getCurrentDirectoryPath() + file.getName());
+
+        if (f.delete()) {
+            System.out.println(file.getName() + " foi eliminado.");
         }
     }
 

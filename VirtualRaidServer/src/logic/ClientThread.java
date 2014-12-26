@@ -1,14 +1,21 @@
 
 package logic;
 
+import classes.Common;
 import classes.Login;
 import classes.Request;
 import classes.Response;
+import classes.VirtualFile;
+import enums.RequestType;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
@@ -101,8 +108,10 @@ public class ClientThread extends Thread {
                             oos.flush();
                             break;
                         case REQ_DELETE:
+                            // ToDo: Verificar o repositório que tem o ficheiro 
+                            //e que está mais livre e se é o dono
                             
-                            // ToDo
+                            deleteFile(req.getFile());
                             break;
                     }
                 }
@@ -126,6 +135,36 @@ public class ClientThread extends Thread {
         System.out.println("<Server:ClientThread> Cliente desligou...");
     }
     
+    private void deleteFile(VirtualFile file) {
+        ObjectInputStream in;
+        ObjectOutputStream out;
+        ByteArrayOutputStream buff;
+        
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            socket.setSoTimeout(Common.MULTICAST_TIME_OUT*1000);
+            
+            // Envia broadcast para eliminar ficheiro
+            DatagramPacket packet = new DatagramPacket(new byte[Common.UDPOBJECT_MAX_SIZE], Common.UDPOBJECT_MAX_SIZE);
+            packet.setAddress(InetAddress.getByName(Common.DELETE_ADDRESS));
+            packet.setPort(Common.DELETE_PORT);
+            
+            buff = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(buff);
+
+            out.writeObject(new Request(file, RequestType.REQ_DELETE));
+            out.flush();
+            out.close();
+
+            packet.setData(buff.toByteArray());
+            packet.setLength(buff.size());
+            
+            socket.send(packet);
+        } catch (IOException e) {
+            System.out.println("<Server:ClientThread> Ocorreu um erro ao enviar pedido de eliminação de ficheiro:\n\t" + e);
+        }
+    }
+    
     private static boolean isValid(Login login) {
         try {
             // RP: Talvez fazer a verificação se o ficheiro existe 
@@ -139,7 +178,7 @@ public class ClientThread extends Thread {
                 }
             }
         } catch(FileNotFoundException e) {
-            System.err.println("Ficheiro "+ServerController.FILE_CREDENTIALS+" não existe:\n\t"+e.getMessage());
+            System.err.println("<Server:ClientThread> Ficheiro "+ServerController.FILE_CREDENTIALS+" não existe:\n\t"+e.getMessage());
         }
         return false;
     }
@@ -163,9 +202,9 @@ public class ClientThread extends Thread {
             oos.writeObject(serverListener.getFilesList());
             oos.flush();
         } catch (SocketTimeoutException e) {
-            System.err.println("<Server:ClientThread> Ligação terminou: " + e);
+            System.out.println("<Server:ClientThread> Ligação terminou:\n\t" + e);
         } catch(IOException e){
-            System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
+            System.out.println("<Server:ClientThread> Ocorreu um erro de ligação:\n\t" + e);
         }
     }
 }
