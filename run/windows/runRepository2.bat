@@ -1,1 +1,1 @@
-java -jar ../../bin/VirtualRaidRepo.jar "/Users/ricardopereira/Desktop/Repo2" 10002
+java -jar ..\..\bin\VirtualRaidRepo.jar "C:\RAID\Repo2" 10002
