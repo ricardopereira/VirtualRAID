@@ -3,10 +3,12 @@ package logic;
 
 import classes.Common;
 import classes.Login;
+import classes.Repository;
 import classes.Request;
 import classes.Response;
 import classes.VirtualFile;
 import enums.RequestType;
+import enums.ResponseType;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,91 +51,110 @@ public class ClientThread extends Thread {
         ObjectInputStream ois;
         
         try {
-            // Verificar autenticacao
-            while (!authenticated) {
-                oos = new ObjectOutputStream(socket.getOutputStream());
-                ois = new ObjectInputStream(socket.getInputStream());
-
-                // Obtem autenticacao do utilizador
-                login = (Login) ois.readObject();
-                
-                if (login == null) { //EOF
-                    // Para terminar a thread
-                    break;
-                }
-                
-                // Verificar login
-                if (isValid(login)) {
-                    authenticated = true;
-                    oos.writeObject(authenticated);
-                    oos.flush();
-                }
-                else {
-                    oos.writeObject(authenticated);
-                    oos.flush();
-                }
-            }
+            socket.setSoTimeout(ServerController.TIMEOUT_AUTH*1000);
             
-            serverListener.onConnectedClient();
-            // Enviar lista de ficheiros inicial
-            filesChangedEvent();
-            
-            // Teste: Simulador de alterações de ficheiros
-            //new SimulateFileChangeThread(this).start();
-                        
-            if (authenticated) {
-                while (true) {
-                    ois = new ObjectInputStream(socket.getInputStream());
+            try {
+                // Verificar autenticacao
+                while (!authenticated) {
                     oos = new ObjectOutputStream(socket.getOutputStream());
+                    ois = new ObjectInputStream(socket.getInputStream());
 
-                    // Obtem pedido do utilizador
-                    Request req = (Request) ois.readObject();
-                    
-                    if (req == null) { //EOF
+                    // Obtem autenticacao do utilizador
+                    login = (Login) ois.readObject();
+
+                    if (login == null) { //EOF
                         // Para terminar a thread
                         break;
                     }
-                                        
-                    // Devolver resposta
-                    switch (req.getOption()) {
-                        case REQ_DOWNLOAD:
-                            // ToDo: Verificar o repositório que tem o ficheiro 
-                            //e que está mais livre
-                            oos.writeObject(new Response("127.0.0.1",10001,req));
-                            oos.flush();
-                            break;
-                        case REQ_UPLOAD:
-                            // ToDo: Verificar o repositório que tem o ficheiro 
-                            //e que está mais livre
-                            oos.writeObject(new Response("127.0.0.1",10001,req));
-                            oos.flush();
-                            break;
-                        case REQ_DELETE:
-                            // ToDo: Verificar o repositório que tem o ficheiro 
-                            //e que está mais livre e se é o dono
-                            
-                            deleteFile(req.getFile());
-                            break;
+
+                    // Verificar login
+                    if (isValid(login)) {
+                        authenticated = true;
+                        oos.writeObject(authenticated);
+                        oos.flush();
+                        // Debug
+                        System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort()+" - Cliente autenticado");
+                    }
+                    else {
+                        oos.writeObject(authenticated);
+                        oos.flush();
                     }
                 }
+            } catch (ClassNotFoundException e) {
+                System.err.println("<Server:ClientThread> Ocorreu um erro a validar as credenciais: " + e);
             }
-        } catch (ClassNotFoundException e) {
-            System.err.println("<Server:ClientThread> Ocorreu um erro a validar as credenciais: " + e);        
+                                    
+            if (authenticated) {
+                // TimeOut após autenticação
+                socket.setSoTimeout(ServerController.TIMEOUT_CLIENT*1000);
+                // Autenticado
+                serverListener.onConnectedClient();
+                
+                // Enviar lista de ficheiros inicial
+                filesChangedEvent();
+
+                // Teste: Simulador de alterações de ficheiros
+                //new SimulateFileChangeThread(this).start();
+                
+                try {
+                    while (true) {
+                        ois = new ObjectInputStream(socket.getInputStream());
+                        oos = new ObjectOutputStream(socket.getOutputStream());
+
+                        // Obtem pedido do utilizador
+                        Request req = (Request) ois.readObject();
+
+                        if (req == null) { //EOF
+                            // Para terminar a thread
+                            break;
+                        }
+
+                        // Devolver resposta
+                        switch (req.getOption()) {
+                            case REQ_DOWNLOAD:
+                                Repository repo = serverListener.getRepositoriesList().getItemWithFileAndMinorConnections(req.getFile());
+                                if (repo == null) {
+                                    // Ficheiro já não existe na lista
+                                    oos.writeObject(new Response(ResponseType.RES_NOFILE,"Sem repositório com o ficheiro "+req.getFile().getName(),req));
+                                }
+                                else {
+                                    oos.writeObject(new Response(repo.getAddress(),repo.getPort(),req));
+                                }                                
+                                oos.flush();                                    
+                                break;
+                            case REQ_UPLOAD:
+                                // ToDo: Verificar o repositório que tem o ficheiro 
+                                //e que está mais livre
+                                oos.writeObject(new Response("127.0.0.1",10001,req));
+                                oos.flush();
+                                break;
+                            case REQ_DELETE:
+                                // ToDo: Verificar o repositório que tem o ficheiro 
+                                //e que está mais livre e se é o dono
+
+                                deleteFile(req.getFile());
+                                break;
+                        }
+                    }
+                } catch(ClassNotFoundException e) {
+                    System.err.println("<Server:ClientThread> Ocorreu um erro a receber pedido: " + e);
+                }
+            }
         } catch (SocketTimeoutException e) {
             System.err.println("<Server:ClientThread> Ligação terminou: " + e);
         } catch(IOException e){
             System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
         } finally {
-            serverListener.onClosingClient();
-            authenticated = false;
-            
+            // Debug
+            System.out.println(socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + " - Cliente foi desligado");
+
             try {
                 socket.close();
             } catch (IOException s) {/*Silencio*/}
+            
+            serverListener.onClosingClient();
+            authenticated = false;
         }
-        
-        // Debug
-        System.out.println("<Server:ClientThread> Cliente desligou...");
     }
     
     private void deleteFile(VirtualFile file) {

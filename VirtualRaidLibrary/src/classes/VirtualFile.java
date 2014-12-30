@@ -5,7 +5,7 @@ import java.util.Date;
 public class VirtualFile extends BaseFile {
     
     // Numero de réplicas nos repositórios
-    private int duplicated;
+    private int nrCopies = 1;
     
     public VirtualFile(BaseFile file) {
         super(file.getName(), file.getSizeBytes(), file.getDateModified());
@@ -14,19 +14,21 @@ public class VirtualFile extends BaseFile {
     public VirtualFile(String name, long size, Date dateModified) {
         super(name, size, dateModified);
     }
-
-    /**
-     * @return the duplicated
-     */
-    public int getDuplicated() {
-        return duplicated;
+    
+    @Override
+    public String toString() {
+        return super.toString() + ", Nr cópias: "+getNrCopies();
     }
 
     /**
-     * @param duplicated the duplicated to set
+     * @return the nrCopies
      */
-    public void setDuplicated(int duplicated) {
-        this.duplicated = duplicated;
+    public int getNrCopies() {
+        return nrCopies;
+    }
+
+    public void incrementNrCopies() {
+        nrCopies++;
     }
     
 }

@@ -1,9 +1,16 @@
 package ui.text;
 
+import classes.BaseFile;
+import classes.Common;
 import classes.FilesList;
 import classes.Login;
 import classes.VirtualFile;
 import enums.ResponseType;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.Date;
 import java.util.Scanner;
 import logic.ClientController;
@@ -13,7 +20,7 @@ public class UIText {
     
     private ClientController ctrl;
     // Servidor principal
-    private String serverAddress = "127.0.0.1"; //Por defeito
+    private String serverAddress;
     private int serverPort = 9000; //Por defeito
     
     public static final int APP_EXIT = 0;
@@ -36,10 +43,52 @@ public class UIText {
         ctrl.setClientListener(clientListener);
     }
     
+    public boolean findServer() {
+        ObjectInputStream in;
+        Object result;
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            socket.setSoTimeout(Common.MULTICAST_TIME_OUT*1000);
+            
+            // Envia broadcast para descobrir servidor
+            DatagramPacket packet = new DatagramPacket(Common.MULTICAST_SECRETKEY_TCP.getBytes(), Common.MULTICAST_SECRETKEY_TCP.getBytes().length,
+                    InetAddress.getByName(Common.MULTICAST_ADDRESS), Common.MULTICAST_PORT);
+            socket.send(packet);
+            
+            // Recebe a resposta: IP
+            packet.setData(new byte[Common.UDPOBJECT_MAX_SIZE]);
+            packet.setLength(Common.UDPOBJECT_MAX_SIZE);
+            socket.receive(packet);            
+            serverAddress = new String(packet.getData(), 0, packet.getLength());
+            
+            // Recebe a resposta: Porto
+            packet.setData(new byte[Common.UDPOBJECT_MAX_SIZE]);
+            packet.setLength(Common.UDPOBJECT_MAX_SIZE);
+            socket.receive(packet);
+            serverPort = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
+            
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+    
     public void startInterface(String localFilesDir) {
         // Diretoria
         ctrl.setLocalFilesDirectory(localFilesDir);
-
+        
+        if (serverAddress == null || serverAddress.trim().equals("")) {
+            System.out.println("À procura do servidor\n...");
+            // Procura o servidor
+            if (findServer()) {
+                System.out.println("Iniciar ligação com: "+getServerAddress()+":"+getServerPort());
+            }
+            else {
+                System.out.println("Nenhum servidor encontrado.");
+                return;
+            }            
+        }
+        
         // Verificar se está ligado ao servidor
         if (!ctrl.getIsConnected()) {
             // Endereço e porto do servidor
@@ -119,7 +168,7 @@ public class UIText {
                 if (opt >= 0 && opt < ctrl.getFilesList().size()) {
                     // Criar cópia do registo para evitar problemas com as threads
                     VirtualFile choosedFile = new VirtualFile(ctrl.getFilesList().get(opt));
-                    System.out.println("Iniciar transferencia de :\n\t" + choosedFile.toString());
+                    System.out.println("Transferência de :\n\t" + choosedFile.toString());
                     
                     // RP: pensar no caso em que um cliente escolheu um ficheiro
                     //mas ainda não se iniciou o download e outro cliente
@@ -127,33 +176,45 @@ public class UIText {
                     
                     ctrl.requestDownloadFile(choosedFile);
                     hasPendingRequest = true;
-                    
-                    System.out.println("A verificar se o ficheiro existe...");
                 }
                 else {
-                    System.out.println("O ficheiro não existe.\n");
+                    System.out.println("Ficheiro não encontrado.\n");
                     currentMenuOption = MenuOptions.OPT_NONE;
                 }
                 break;
             case OPT_UPLOAD:
+                // Imprime a lista de ficheiros locais
+                printLocalFiles();
                 System.out.println("Escolha o ficheiro para fazer upload: ");
                 // Obter o índice do ficheiro
                 opt = getOptionNumber();
                 
-                // ToDo
-                ctrl.requestUploadFile(new VirtualFile("ScreenShot2014.png", 1000, new Date()));
-                hasPendingRequest = true;
-                
+                if (opt < 0 || opt >= ctrl.getLocalFilesList().size()) {
+                    System.out.println("Ficheiro local não existe.");
+                    currentMenuOption = MenuOptions.OPT_NONE;
+                }
+                else {
+                    // Ficheiro local seleccionado
+                    BaseFile file = ctrl.getLocalFilesList().get(opt);
+                    ctrl.requestUploadFile(new VirtualFile(file));
+                    hasPendingRequest = true;
+                }
                 break;
             case OPT_DELETE:
                 System.out.println("Escolha o ficheiro para eliminar: ");
                 // Obter o índice do ficheiro
-                opt = getOptionNumber();
+                opt = getOptionNumber();                
                 
-                // ToDo
-                ctrl.requestDeleteFile(new VirtualFile("ScreenShot2014.png", 1000, new Date()));
-                hasPendingRequest = true;
-                
+                if (opt >= 0 && opt < ctrl.getFilesList().size()) {
+                    // Criar cópia do registo para evitar problemas com as threads
+                    VirtualFile choosedFile = new VirtualFile(ctrl.getFilesList().get(opt));
+                    System.out.println("Enviar pedido de remoção de :\n\t" + choosedFile.toString());                    
+                    ctrl.requestDeleteFile(choosedFile);
+                }
+                else {
+                    System.out.println("Ficheiro não encontrado.\n");
+                }
+                currentMenuOption = MenuOptions.OPT_NONE;
                 break;
             default:
                 System.out.println("Adeus...");
@@ -169,7 +230,7 @@ public class UIText {
         Login login = null;
         String word;
 
-        System.out.println("\nAUTENTICAÇÃO:");
+        System.out.println("\nAUTENTICAÇÃO");
         Scanner sc = new Scanner(System.in);
         System.out.print("Username: ");
         while ((word = sc.nextLine()) != null) {
@@ -189,11 +250,11 @@ public class UIText {
     }
     
     private void printMenuOptions() {
-        System.out.println("MENU:");
-        System.out.println(" "+APP_EXIT+". Sair");
+        System.out.println("MENU");
         System.out.println(" 1. Download ficheiro");
         System.out.println(" 2. Upload ficheiro");
         System.out.println(" 3. Delete ficheiro");
+        System.out.println(" "+APP_EXIT+". Sair");        
     }
     
     private void printCurrentInterface() {
@@ -229,15 +290,15 @@ public class UIText {
             System.out.println(" Prima a tecla "+APP_DONE+" para cancelar: ");
     }
     
-    private void printPendingChoice(boolean printChooseOption) {
-        // Imprime a lista de ficheiros
-        System.out.println("\nFICHEIROS:");
+    private void printPendingChoice(boolean printChooseOption) {        
+        // Imprime a lista de ficheiros remotos
+        System.out.println("\nFICHEIROS NO SISTEMA:");
         if (ctrl.canUseFilesList()) {
             System.out.println(ctrl.getFilesList().toString());
         }
         else {
-            System.out.println("Lista de ficheiros vazia.\n");
-        }
+            System.out.println("Sem ficheiros.\n");
+        }        
 
         // Só imprime o Menu se não seleccionou nenhuma opção
         if (currentMenuOption == MenuOptions.OPT_NONE) {
@@ -252,6 +313,8 @@ public class UIText {
                     System.out.println("Escolha o ficheiro para fazer download: ");
                     break;
                 case OPT_UPLOAD:
+                    // Imprime a lista de ficheiros locais
+                    printLocalFiles();
                     System.out.println("Escolha o ficheiro para fazer upload: ");
                     break;
                 case OPT_DELETE:
@@ -262,6 +325,15 @@ public class UIText {
         else if (printChooseOption) {
             System.out.println(" Opcao: ");
         }
+    }
+    
+    private void printLocalFiles() {
+        System.out.println("\nFICHEIROS LOCAIS:");
+        int index = 0;
+        for (BaseFile item : ctrl.getLocalFilesList()) {
+            System.out.println((index++)+". "+item.toString());
+        }
+        System.out.println((index++)+". CANCELAR");
     }
     
     private ClientListener clientListener = new ClientListener() {

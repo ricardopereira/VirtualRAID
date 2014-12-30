@@ -2,12 +2,14 @@ package classes;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Repository implements Serializable {
     
     private String address;
     private int port;
-    final private ArrayList<RepositoryFile> files;
+    private int currentConnections;
+    private final ArrayList<RepositoryFile> files;
     
     public Repository(String address, int port) {
         this.address = address;
@@ -33,9 +35,17 @@ public class Repository implements Serializable {
         if (obj == null)
             return false;
         if (obj instanceof Repository) {
-            return (((Repository) obj).address.equals(this.address));
+            return (((Repository) obj).getAddressAndPort().equals(this.getAddressAndPort()));
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 71 * hash + Objects.hashCode(this.address);
+        hash = 71 * hash + this.port;
+        return hash;
     }
     
     /**
@@ -74,6 +84,13 @@ public class Repository implements Serializable {
     }
     
     /**
+     * @return address and port
+     */
+    public String getAddressAndPort() {
+        return getAddress()+":"+getPort();
+    }
+    
+    /**
      * @return the files
      */
     public FilesList getFilesList() {
@@ -83,6 +100,11 @@ public class Repository implements Serializable {
             map.add(new VirtualFile(item));
         }
         return map;
+    }
+
+    // ToDo
+    public int getCurrentConnections() {
+        return currentConnections;
     }
     
 }

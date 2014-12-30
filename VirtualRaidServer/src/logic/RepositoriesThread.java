@@ -65,16 +65,16 @@ public class RepositoriesThread extends Thread {
                         return;
                     
                     if (obj != null && obj instanceof Heartbeat) {
-                        
                         // Teste - Heartbeat
-                        System.out.println(packet.getAddress().getHostAddress()+" - total conexões: "+((Heartbeat) obj).getCurrentConnections());
+                        //System.out.println(packet.getAddress().getHostAddress()+":"+packet.getPort()+" - ligações: "+((Heartbeat) obj).getCurrentConnections());
+                        
+                        // ToDo - remover repositório sem Heartbeat
                     }
                     else if (obj != null && obj instanceof Repository) {
                         // Adiciona ou actualiza
                         ctrl.addActiveRepository((Repository) obj);
-                        
-                        // Teste - Lista de ficheiros
-                        System.out.println(packet.getAddress().getHostAddress()+" - Repository"+((Repository) obj).toString());
+                        // Mostra ficheiros do repositório ligado
+                        System.out.println(packet.getAddress().getHostAddress()+":"+packet.getPort()+" - "+((Repository) obj).toString());
                     }
                 } catch (ClassNotFoundException | IOException e) {
                     System.out.println("Impossibilidade de aceder ao conteudo da mensagem recebida!");

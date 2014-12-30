@@ -13,6 +13,8 @@ public interface ServerListener {
     void onConnectedClient();
     void onClosingClient();
     
+    RepositoriesList getRepositoriesList();
+    
     FilesList getFilesList();
     
 }

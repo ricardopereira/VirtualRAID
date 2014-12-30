@@ -26,7 +26,6 @@ import java.util.ArrayList;
  */
 public class RepoController {
     
-    public static final int MAX_SIZE = 1000;
     public static final int TIMEOUT = 5; //Segundos
     
     // Ligação dos Clientes
@@ -41,15 +40,12 @@ public class RepoController {
     private int serverPort;
 
     private final Repository self;
-    private final int port;
     private final FileManager fileManager;
     private int currentConnections;
     
     public RepoController(String host, int listenPort, FileManager fm) {
-        this.port = listenPort;
-        
         // Criação do repositorio
-        self = new Repository(host, port);
+        self = new Repository(host, listenPort /*Client*/);
         // Carregar a lista de ficheiros
         this.fileManager = fm;
         this.fileManager.loadFiles(self.getFiles());
@@ -76,18 +72,18 @@ public class RepoController {
             socket.send(packet);
             
             // Recebe a resposta: IP
-            packet.setData(new byte[MAX_SIZE]);
-            packet.setLength(MAX_SIZE);
+            packet.setData(new byte[Common.UDPOBJECT_MAX_SIZE]);
+            packet.setLength(Common.UDPOBJECT_MAX_SIZE);
             socket.receive(packet);            
             serverAddress = new String(packet.getData(), 0, packet.getLength());
             
             // Recebe a resposta: Porto
-            packet.setData(new byte[MAX_SIZE]);
-            packet.setLength(MAX_SIZE);
+            packet.setData(new byte[Common.UDPOBJECT_MAX_SIZE]);
+            packet.setLength(Common.UDPOBJECT_MAX_SIZE);
             socket.receive(packet);
             serverPort = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
             
-            heartbeatSocket = new DatagramSocket();
+            heartbeatSocket = new DatagramSocket(self.getPort());
             return true;
         } catch (IOException e) {
             heartbeatSocket = null;
@@ -98,7 +94,7 @@ public class RepoController {
     public void startListeningClients() {
         // Socket do Servidor
         try {
-            mainSocket = new ServerSocket(port);
+            mainSocket = new ServerSocket(self.getPort());
         } catch (SocketException e) {
             System.err.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
             return;

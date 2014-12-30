@@ -4,6 +4,7 @@ import classes.Common;
 import classes.FileManager;
 import classes.FilesList;
 import classes.Login;
+import classes.RepositoryFile;
 import classes.Request;
 import classes.Response;
 import classes.VirtualFile;
@@ -21,6 +22,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 /**
  * ClientController classe.
@@ -37,7 +39,8 @@ public class ClientController {
     private Socket mainSocket;
     
     private boolean isAuthenticated = false;
-    private volatile FilesList filesList = new FilesList(); //Remote files list
+    private volatile FilesList remoteFilesList = new FilesList(); //Remote files list
+    private ArrayList<RepositoryFile> localFilesList; //Local files list
     private ResponsesManager responsesManagerThread;
     private ClientListener clientListener;
     
@@ -58,6 +61,9 @@ public class ClientController {
             System.err.println("Diretório de ficheiros não foi definido.");
             return false;
         }
+        
+        // Ficheiros locais
+        refreshLocalFilesList();
         
         try {
             // Estabelecer ligação com o servidor
@@ -109,7 +115,12 @@ public class ClientController {
         }
 
         responsesManagerThread = null;
-        filesList = null;        
+        remoteFilesList = null;        
+    }
+    
+    public synchronized void refreshLocalFilesList() {
+        localFilesList = new ArrayList<>();
+        getLocalFilesManager().loadFiles(localFilesList);
     }
     
     public Socket getMainSocket() {
@@ -361,7 +372,7 @@ public class ClientController {
                 System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
             }
             // Terminou a transferência
-            performOperationFinished("Concluido");
+            performOperationFinished("Concluído");
         } finally {
             if (tempSocket != null) {
                 try {
@@ -398,16 +409,20 @@ public class ClientController {
     }
     
     public boolean canUseFilesList() {
-        return filesList != null && !filesList.isEmpty();
+        return remoteFilesList != null && !remoteFilesList.isEmpty();
     }
     
     public FilesList getFilesList() {
-        return filesList;
+        return remoteFilesList;
     }
     
     public void setFilesList(FilesList newFilesList) {
-        this.filesList = newFilesList;
-        performFilesListChanged(filesList);
+        this.remoteFilesList = newFilesList;
+        performFilesListChanged(remoteFilesList);
+    }
+    
+    public ArrayList<RepositoryFile> getLocalFilesList() {
+        return localFilesList;
     }
     
     private void performFilesListChanged(FilesList filesList) {
@@ -459,6 +474,12 @@ public class ClientController {
         } catch (FileManager.DirectoryNoPermissions e) {
             performFilesError(e.getMessage());
         }
+    }
+    
+    public FileManager getLocalFilesManager() {
+        if (localFilesManager == null)
+            System.err.println("Gestor de ficheiros não foi definido");
+        return localFilesManager;
     }
  
 }

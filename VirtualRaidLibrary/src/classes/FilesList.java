@@ -17,4 +17,21 @@ public class FilesList extends ArrayList<VirtualFile> {
         return sb.toString();
     }
     
+    public void addRepositoryFiles(Repository repository) {
+        if (repository == null)
+            return;
+        for (BaseFile file : repository.getFiles()) {
+            int fileIndex = indexOf(file);
+            // Verifica se o ficheiro já existe
+            if (fileIndex >= 0) {
+                // Já existe, incrementar o número de cópias
+                get(fileIndex).incrementNrCopies();
+            }
+            else {
+                // Ainda não existe, adicionar à lista
+                add(new VirtualFile(file));
+            }
+        }
+    }
+    
 }

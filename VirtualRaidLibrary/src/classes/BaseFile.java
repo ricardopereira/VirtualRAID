@@ -2,6 +2,7 @@ package classes;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 public class BaseFile implements Serializable {
     
@@ -15,11 +16,33 @@ public class BaseFile implements Serializable {
         this.dateModified = dateModified;
     }
     
+    public String uniqueKey() {
+        return getName().trim() +":"+ getSizeBytes();
+    }
+    
     @Override
     public String toString() {
         return name + ", Tamanho: " + getSizeKb() + "Kb, Modificado em: " + getDateModified();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj instanceof BaseFile) {
+            return (((BaseFile) obj).uniqueKey().equalsIgnoreCase(this.uniqueKey()));
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 73 * hash + Objects.hashCode(this.name);
+        hash = 73 * hash + (int) (this.size ^ (this.size >>> 32));
+        return hash;
+    }
+    
     /**
      * @return the name
      */

@@ -19,7 +19,7 @@ public class ServerController implements Runnable {
     public static final String FILE_CREDENTIALS = "credenciais.txt";
     
     // Constantes
-    public static final int MAX_SIZE = 4000;
+    public static final int TIMEOUT_AUTH = 60; //1 minuto
     public static final int TIMEOUT_CLIENT = 300; //5 minutos
     
     // Ligação dos Clientes
@@ -31,7 +31,7 @@ public class ServerController implements Runnable {
     
     private int port;
     // Lista de repositórios activos
-    private ArrayList<Repository> activeRepositories;
+    private RepositoriesList activeRepositories;
     // Lista de clientes activos
     private ArrayList<ClientThread> activeClients;
     
@@ -81,6 +81,8 @@ public class ServerController implements Runnable {
         
         while (true) {
             // À espera de pedidos de ligação...
+            System.out.println("Aguarda ligação de um cliente...\n");
+            
             try {
                 clientSocket = mainSocket.accept();
             } catch (IOException e) {
@@ -88,44 +90,37 @@ public class ServerController implements Runnable {
                 return; //Termina o servidor
             }
 
-            try {
-                clientSocket.setSoTimeout(TIMEOUT_CLIENT*1000);
+            System.out.println(clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort() + " - Cliente estabeleceu ligação");
 
-                System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
-                // Cria thread para o cliente
-                ClientThread clientThread = new ClientThread(clientSocket);
-                clientThread.setServerListener(new ServerListener() {
+            // Cria thread para o cliente
+            ClientThread clientThread = new ClientThread(clientSocket);
+            clientThread.setServerListener(new ServerListener() {
 
-                    @Override
-                    public void onConnectedClient() {
-                        
-                    }
+                @Override
+                public void onConnectedClient() {
 
-                    @Override
-                    public void onClosingClient() {
-                        getActiveClients().remove(clientThread);
-                        // Debug
-                        System.out.println("Cliente foi desligado");
-                    }
+                }
 
-                    @Override
-                    public FilesList getFilesList() {
-                        return getAllFiles();
-                    }
-                    
-                });
-                // Adiciona o cliente que se ligou
-                getActiveClients().add(clientThread);
-                // Inicia a thread do cliente
-                clientThread.start();
-            } catch (IOException e) {
-                System.out.println("Ocorreu um erro na ligação com o cliente: \n\t" + e);
-                try {
-                    clientSocket.close();
-                } catch (IOException s) {/*Silencio*/}
-            }
-            
-            System.out.println("A aguardar novo cliente");
+                @Override
+                public void onClosingClient() {
+                    getActiveClients().remove(clientThread);
+                }
+                
+                @Override
+                public FilesList getFilesList() {
+                    return getAllFiles();
+                }
+
+                @Override
+                public RepositoriesList getRepositoriesList() {
+                    return getActiveRepositories();
+                }
+
+            });
+            // Adiciona o cliente que se ligou
+            getActiveClients().add(clientThread);
+            // Inicia a thread do cliente
+            clientThread.start();
         }
     }
 
@@ -149,9 +144,9 @@ public class ServerController implements Runnable {
             client.filesChangedEvent();
     }
     
-    public ArrayList<Repository> getActiveRepositories() {
+    public RepositoriesList getActiveRepositories() {
         if (activeRepositories == null)
-            activeRepositories = new ArrayList<>();
+            activeRepositories = new RepositoriesList();
         return activeRepositories;
     }
     
@@ -164,8 +159,7 @@ public class ServerController implements Runnable {
     public FilesList getAllFiles() {
         FilesList allFiles = new FilesList();
         for (Repository item : getActiveRepositories()) {
-            allFiles.addAll(item.getFilesList());
-            // ToDo: número de replicas
+            allFiles.addRepositoryFiles(item);
         }    
         return allFiles;
     }
