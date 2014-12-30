@@ -1,0 +1,1 @@
+java -jar ../../bin/VirtualRaidClient.jar "/Users/ricardopereira/Desktop/Client1" 127.0.0.1 8999

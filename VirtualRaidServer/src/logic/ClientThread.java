@@ -18,6 +18,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.net.URISyntaxException;
 import java.util.Scanner;
 import tests.SimulateFileChangeThread;
 
@@ -98,13 +99,13 @@ public class ClientThread extends Thread {
                         case REQ_DOWNLOAD:
                             // ToDo: Verificar o repositório que tem o ficheiro 
                             //e que está mais livre
-                            oos.writeObject(new Response("127.0.0.1",9001,req));
+                            oos.writeObject(new Response("127.0.0.1",10001,req));
                             oos.flush();
                             break;
                         case REQ_UPLOAD:
                             // ToDo: Verificar o repositório que tem o ficheiro 
                             //e que está mais livre
-                            oos.writeObject(new Response("127.0.0.1",9001,req));
+                            oos.writeObject(new Response("127.0.0.1",10001,req));
                             oos.flush();
                             break;
                         case REQ_DELETE:
@@ -166,10 +167,16 @@ public class ClientThread extends Thread {
     }
     
     private static boolean isValid(Login login) {
+        String credentialsPath = ServerController.FILE_CREDENTIALS;
         try {
+            File runnablePath = new File(ClientThread.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            if (runnablePath.isDirectory() && runnablePath.canRead())
+                credentialsPath = runnablePath.getPath() + File.separator + credentialsPath;
+            else
+                credentialsPath = runnablePath.getParentFile().getPath() + File.separator + credentialsPath;
             // RP: Talvez fazer a verificação se o ficheiro existe 
             //logo no arranque do servidor será porreiro para no caso de falhar
-            Scanner sc = new Scanner(new File(ServerController.FILE_CREDENTIALS));
+            Scanner sc = new Scanner(new File(credentialsPath));
             while (sc.hasNext()) {
                 // Verifica linha a linha
                 if (sc.nextLine().equals(login.getUsername()+" "+login.getPassword())) {
@@ -179,6 +186,8 @@ public class ClientThread extends Thread {
             }
         } catch(FileNotFoundException e) {
             System.err.println("<Server:ClientThread> Ficheiro "+ServerController.FILE_CREDENTIALS+" não existe:\n\t"+e.getMessage());
+        } catch (URISyntaxException ex) {
+
         }
         return false;
     }

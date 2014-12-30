@@ -1,6 +1,5 @@
 package ui.text;
 
-import classes.Repository;
 import logic.ServerController;
 
 public class Main {
@@ -9,9 +8,13 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // ToDo: receber argumentos
-        ServerController ctrl = new ServerController(9000);        
-        System.out.println("Servidor de ficheiros iniciado...");
+        if (args.length != 1) {
+            System.out.println("Servidor de ficheiros não foi iniciado:\n\t- Argumentos <porto_escuta>");
+            return;
+        }
+        int listenPort = Integer.parseInt(args[0]);
+        ServerController ctrl = new ServerController(listenPort);
+        System.out.println("Servidor de ficheiros iniciado no porto "+listenPort);
         // Iniciar recepção de clientes
         //(Bloqueante)
         ctrl.startListeningClients();

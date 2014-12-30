@@ -12,6 +12,9 @@ import logic.ClientListener;
 public class UIText {
     
     private ClientController ctrl;
+    // Servidor principal
+    private String serverAddress = "127.0.0.1"; //Por defeito
+    private int serverPort = 9000; //Por defeito
     
     public static final int APP_EXIT = 0;
     public static final int APP_DONE = 9;
@@ -33,11 +36,14 @@ public class UIText {
         ctrl.setClientListener(clientListener);
     }
     
-    public void startInterface() {
+    public void startInterface(String localFilesDir) {
+        // Diretoria
+        ctrl.setLocalFilesDirectory(localFilesDir);
+
         // Verificar se está ligado ao servidor
         if (!ctrl.getIsConnected()) {
-            // ToDo: falta os argumentos para o endereço e porta do servidor
-            if (ctrl.connectToServer("127.0.0.1",9000)) {
+            // Endereço e porto do servidor
+            if (ctrl.connectToServer(getServerAddress(),getServerPort())) {
                 System.out.println("Ligado ao servidor principal...");
             }
             else {
@@ -45,10 +51,7 @@ public class UIText {
                 return;
             }
         }
-        
-        // ToDo
-        ctrl.setLocalFilesDirectory("/Users/ricardopereira/Desktop/Client");
-        
+                
         // Verificar se está autenticado
         while (!ctrl.getIsAuthenticated()) {
             menuAuthenticate();
@@ -305,5 +308,21 @@ public class UIText {
         }
         
     };
+
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    public void setServerAddress(String serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
 
 }

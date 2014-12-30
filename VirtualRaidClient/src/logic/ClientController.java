@@ -7,7 +7,6 @@ import classes.Login;
 import classes.Request;
 import classes.Response;
 import classes.VirtualFile;
-import com.sun.xml.internal.ws.api.message.Packet;
 import enums.RequestType;
 import enums.ResponseType;
 import java.io.FileInputStream;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -47,14 +45,19 @@ public class ClientController {
     private String localFilesDirectory;
     private FileManager localFilesManager = null;
     
-    public ClientController(String dir) {
-        this.localFilesDirectory = dir;
+    public ClientController() {
+
     }
     
     public boolean connectToServer(String host, int port) {
         // Se já está activo, não faz nada
         if (getIsConnected())
             return true;
+        
+        if (localFilesDirectory == null || localFilesDirectory.trim().equals("")) {
+            System.err.println("Diretório de ficheiros não foi definido.");
+            return false;
+        }
         
         try {
             // Estabelecer ligação com o servidor

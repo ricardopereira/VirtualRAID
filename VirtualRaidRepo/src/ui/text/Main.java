@@ -11,9 +11,13 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // ToDo: receber por argumento
-        String dir = "/Users/ricardopereira/Desktop/Repo";
-        int port = 9001;
+        if (args.length != 2) {
+            System.out.println("Repositório não foi iniciado:\n\t- Argumentos <diretoria> <porto_escuta>");
+            return;
+        }
+        // Arguments
+        String dir = args[0];
+        int port = Integer.parseInt(args[1]);
         
         FileManager fm = null;
         try {

@@ -1,0 +1,1 @@
+java -jar ../../bin/VirtualRaidClient.jar "/Users/ricardopereira/Desktop/Client2"
