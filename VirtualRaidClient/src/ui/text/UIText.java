@@ -11,14 +11,13 @@ import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Date;
 import java.util.Scanner;
 import logic.ClientController;
 import logic.ClientListener;
 
 public class UIText {
     
-    private ClientController ctrl;
+    private final ClientController ctrl;
     // Servidor principal
     private String serverAddress;
     private int serverPort = 9000; //Por defeito

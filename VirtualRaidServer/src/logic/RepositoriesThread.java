@@ -65,10 +65,10 @@ public class RepositoriesThread extends Thread {
                         return;
                     
                     if (obj != null && obj instanceof Heartbeat) {
-                        // Teste - Heartbeat
+                        // Número de ligações
+                        ctrl.setRepositoryActiveConnections(packet.getAddress().getHostAddress(), packet.getPort(), ((Heartbeat) obj).getCurrentConnections());
+                        // Debug - Heartbeat
                         //System.out.println(packet.getAddress().getHostAddress()+":"+packet.getPort()+" - ligações: "+((Heartbeat) obj).getCurrentConnections());
-                        
-                        // ToDo - remover repositório sem Heartbeat
                     }
                     else if (obj != null && obj instanceof Repository) {
                         // Adiciona ou actualiza

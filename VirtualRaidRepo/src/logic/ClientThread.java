@@ -4,19 +4,15 @@ import classes.Common;
 import classes.FileManager;
 import classes.Request;
 import classes.RepositoryFile;
-import classes.Response;
 import classes.VirtualFile;
-import enums.ResponseType;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Date;
 
 /**
  * ClientThread classe.

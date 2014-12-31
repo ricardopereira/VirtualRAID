@@ -26,6 +26,8 @@ public class ServerController implements Runnable {
     private ServerSocket mainSocket;
     // HeartBeat e lista de ficheiros
     private RepositoriesThread repositoriesThread;
+    // Timer para verificar os repositórios activos
+    private CheckRepositoriesTimer checkRepositoriesTimer;
     // Pesquisar o servidor
     private MulticastThread multicastThread;
     
@@ -58,6 +60,10 @@ public class ServerController implements Runnable {
         // Iniciar recepção de Heartbeats e ficheiros de repositórios
         repositoriesThread = new RepositoriesThread(this);
         repositoriesThread.start();
+        
+        // Timer para verificar repositórios activos
+        checkRepositoriesTimer = new CheckRepositoriesTimer(this);
+        checkRepositoriesTimer.start();
 
         // Escuta os clientes
         try {
@@ -66,6 +72,7 @@ public class ServerController implements Runnable {
             // Termina as várias threads
             multicastThread.interrupt();
             repositoriesThread.interrupt();
+            checkRepositoriesTimer.interrupt();
             
             // Fecha o socket do servidor
             try {
@@ -139,12 +146,21 @@ public class ServerController implements Runnable {
         updateClients();
     }
     
+    public void setRepositoryActiveConnections(String address, int port, int nrConnections) {
+        int index = getActiveRepositories().indexOf(new Repository(address, port));
+        if (index >= 0) {
+            Repository activeRepository = getActiveRepositories().get(index);
+            activeRepository.setNrConnections(nrConnections);
+            activeRepository.setLastUpdate();
+        }
+    }
+    
     public void updateClients() {
         for (ClientThread client : getActiveClients())
             client.filesChangedEvent();
     }
     
-    public RepositoriesList getActiveRepositories() {
+    public synchronized RepositoriesList getActiveRepositories() {
         if (activeRepositories == null)
             activeRepositories = new RepositoriesList();
         return activeRepositories;

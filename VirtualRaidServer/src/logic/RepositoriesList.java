@@ -13,7 +13,7 @@ public class RepositoriesList extends ArrayList<Repository> {
                 if (repo == null) {
                     repo = item;
                 }
-                else if (item.getCurrentConnections() < repo.getCurrentConnections()) {
+                else if (item.getNrConnections() < repo.getNrConnections()) {
                     repo = item;
                 }
             }
@@ -28,7 +28,7 @@ public class RepositoriesList extends ArrayList<Repository> {
                 if (repo == null) {
                     repo = item;
                 }
-                else if (item.getCurrentConnections() < repo.getCurrentConnections()) {
+                else if (item.getNrConnections() < repo.getNrConnections()) {
                     repo = item;
                 }
             }

@@ -2,19 +2,22 @@ package classes;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 
 public class Repository implements Serializable {
     
     private String address;
     private int port;
-    private int currentConnections;
+    private int nrConnections;
+    private Date lastUpdate;
     private final ArrayList<RepositoryFile> files;
     
     public Repository(String address, int port) {
         this.address = address;
         this.port = port;
         files = new ArrayList<>();
+        setLastUpdate();
     }
 
     @Override
@@ -102,9 +105,20 @@ public class Repository implements Serializable {
         return map;
     }
 
-    // ToDo
-    public int getCurrentConnections() {
-        return currentConnections;
+    public int getNrConnections() {
+        return nrConnections;
+    }
+    
+    public void setNrConnections(int value) {
+        this.nrConnections = value;
+    }
+    
+    public Date getLastUpdate() {
+        return lastUpdate;
+    }
+    
+    public void setLastUpdate() {
+        lastUpdate = new Date();
     }
     
 }
