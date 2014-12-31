@@ -5,6 +5,7 @@ import classes.Common;
 import classes.FileManager;
 import classes.Repository;
 import classes.RepositoryFile;
+import classes.VirtualFile;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -168,8 +169,8 @@ public class RepoController {
                         getFiles().add(file);
                         // Informa do novo ficheiro
                         filesChangedEvent();
-                        
-                        // ToDo: Replicar ficheiro...
+                        // REPLICAR
+                        replicateFile(file);
                     }
                 
                 });
@@ -250,6 +251,10 @@ public class RepoController {
             // Informa que a lista foi modificada
             filesChangedEvent();
         }        
+    }
+    
+    private void replicateFile(BaseFile file) {
+        new Thread(new ReplicateRequest(this, file)).start();
     }
 
 }
