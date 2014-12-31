@@ -12,13 +12,16 @@ public enum ResponseType {
     RES_NOFILE, 
     RES_NOPERMISSION, 
     RES_CANCELED, 
-    RES_PROGRESS;
+    RES_PROGRESS,
+    RES_ALREADYEXIST;
     
     public static final String[] labels = {
         "Erro a obter resposta", 
         "Bem sucedido", 
         "Ficheiro não existe", 
         "Sem permissões para o ficheiro", 
-        "Cancelado", ""
+        "Cancelado", 
+        "",
+        "Ficheiro já existe"
     };
 }

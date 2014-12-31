@@ -337,6 +337,8 @@ public class UIText {
     }
     
     private ClientListener clientListener = new ClientListener() {
+        
+        int progress;
 
         @Override
         public void onFilesListChanged(FilesList newFilesList) {
@@ -358,11 +360,13 @@ public class UIText {
         @Override
         public void onOperationStarted(String fileName) {
             System.out.println(fileName);
+            progress = 0;
         }
         
         @Override
         public void onOperationProgress(int nbytes) {
-            System.out.println("Transferido... "+nbytes);
+            progress += nbytes;
+            System.out.println("Progresso... "+progress);
         }
         
         @Override

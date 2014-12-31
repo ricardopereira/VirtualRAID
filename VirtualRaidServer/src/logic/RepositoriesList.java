@@ -21,4 +21,19 @@ public class RepositoriesList extends ArrayList<Repository> {
         return repo;
     }
     
+    public Repository getItemWithMinorConnections(BaseFile file) {
+        Repository repo = null;
+        for (Repository item : this) {
+            if (!item.getFiles().contains(file)) {
+                if (repo == null) {
+                    repo = item;
+                }
+                else if (item.getCurrentConnections() < repo.getCurrentConnections()) {
+                    repo = item;
+                }
+            }
+        }
+        return repo;
+    }
+    
 }

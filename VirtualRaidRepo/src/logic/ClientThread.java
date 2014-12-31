@@ -38,14 +38,11 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         Request req;
-        OutputStream out;
         ObjectInputStream oin;
-        ObjectOutputStream oout;
+        OutputStream out;
         
         performConnectedClient();
         try {
-            out = socket.getOutputStream();
-            oout = new ObjectOutputStream(out);
             oin = new ObjectInputStream(socket.getInputStream());
 
             // Obtem pedido do utilizador
@@ -59,16 +56,16 @@ public class ClientThread extends Thread {
             // Verificar pedido
             switch (req.getOption()) {
                 case REQ_DOWNLOAD:
+                    out = socket.getOutputStream();
+                    System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort() + " - Enviar ficheiro "+req.getFile().getName());
                     sendFile(req.getFile(), out);
+                    out.close();
                     break;
                 case REQ_UPLOAD:
-                    // Aceita o pedido
-                    oout.writeObject(new Response(ResponseType.RES_OK, null, req));
-                    oout.flush();
-                    
-                    // ToDo: verificar se o ficheiro já existe
-                    
+                    out = socket.getOutputStream();
+                    System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort() + " - Receber ficheiro "+req.getFile().getName());
                     receiveFile(req.getFile(), (InputStream) oin);
+                    out.close();
                     break;
             }
         } catch (ClassNotFoundException e) {            
@@ -83,15 +80,12 @@ public class ClientThread extends Thread {
         }
     }
     
-    public void sendFile(VirtualFile file, OutputStream out)
-    {
+    public void sendFile(VirtualFile file, OutputStream out) {
         if (socket == null || file == null)
             return;
         
         // ToDo: Verificar a situação da lista de ficheiros e o 
         //VirtualFile vs RepositoryFile
-        
-        // ToDo: Obter ficheiro pelo nome e data modificação
         
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;
@@ -100,15 +94,18 @@ public class ClientThread extends Thread {
         try {
             requestedFileInputStream = new FileInputStream(filesManager.getCurrentDirectoryPath() + file.getName());
             while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
+                // Debug
+                System.out.println("Readed "+nbytes);
+                // Work
                 out.write(fileChunck, 0, nbytes);
                 out.flush();
             }
+            System.out.println("Done");
         } catch (FileNotFoundException e) {
             System.out.println("Ficheiro " + filesManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
         } catch(IOException e) {
             System.out.println("Ocorreu a excepcao de E/S:\n\t" + e);
         }
-        System.out.println("Transferencia concluida");
     }
     
     public void receiveFile(VirtualFile file, InputStream in)
@@ -130,13 +127,17 @@ public class ClientThread extends Thread {
                     return;
                 }
                 
-                System.out.println("A receber ficheiro "+file.getName());
+                System.out.println("A receber "+file.getName());
                 // First chunk
                 localFileOutputStream.write(fileChunck, 0, nbytes); 
                 // Receber o ficheiro
                 while ((nbytes = in.read(fileChunck)) > 0) {
+                    // Debug
+                    System.out.println("Writed "+nbytes);
+                    // Work
                     localFileOutputStream.write(fileChunck, 0, nbytes);
                 }
+                System.out.println("Done");
             }
         } catch (IOException e) {
             System.out.println("Erro de E/S:\n\t"+e);
@@ -149,8 +150,8 @@ public class ClientThread extends Thread {
             }
         }
         
-        // ToDo: tamanho do ficheiro
-        performNewFile(new RepositoryFile(file.getName(), 0, new Date()));
+        // Refresh files
+        performNewFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
     }
     
     private void performNewFile(RepositoryFile file) {

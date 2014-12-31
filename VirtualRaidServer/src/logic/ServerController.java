@@ -90,7 +90,7 @@ public class ServerController implements Runnable {
                 return; //Termina o servidor
             }
 
-            System.out.println(clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort() + " - Cliente estabeleceu ligação");
+            System.out.println(clientSocket.getInetAddress().getHostAddress()+":"+clientSocket.getPort() + " no porto " + clientSocket.getLocalPort() + " - Cliente estabeleceu ligação");
 
             // Cria thread para o cliente
             ClientThread clientThread = new ClientThread(clientSocket);

@@ -47,6 +47,7 @@ public class ClientThread extends Thread {
             return;
         
         Login login;
+        Repository repo;
         ObjectOutputStream oos;
         ObjectInputStream ois;
         
@@ -112,7 +113,7 @@ public class ClientThread extends Thread {
                         // Devolver resposta
                         switch (req.getOption()) {
                             case REQ_DOWNLOAD:
-                                Repository repo = serverListener.getRepositoriesList().getItemWithFileAndMinorConnections(req.getFile());
+                                repo = serverListener.getRepositoriesList().getItemWithFileAndMinorConnections(req.getFile());
                                 if (repo == null) {
                                     // Ficheiro já não existe na lista
                                     oos.writeObject(new Response(ResponseType.RES_NOFILE,"Sem repositório com o ficheiro "+req.getFile().getName(),req));
@@ -123,15 +124,17 @@ public class ClientThread extends Thread {
                                 oos.flush();                                    
                                 break;
                             case REQ_UPLOAD:
-                                // ToDo: Verificar o repositório que tem o ficheiro 
-                                //e que está mais livre
-                                oos.writeObject(new Response("127.0.0.1",10001,req));
+                                repo = serverListener.getRepositoriesList().getItemWithMinorConnections(req.getFile());
+                                if (repo == null) {
+                                    // Ficheiro já existe nos repositórios
+                                    oos.writeObject(new Response(ResponseType.RES_ALREADYEXIST,"Sem repositório para enviar o ficheiro "+req.getFile().getName(),req));
+                                }
+                                else {
+                                    oos.writeObject(new Response(repo.getAddress(),repo.getPort(),req));
+                                }
                                 oos.flush();
                                 break;
                             case REQ_DELETE:
-                                // ToDo: Verificar o repositório que tem o ficheiro 
-                                //e que está mais livre e se é o dono
-
                                 deleteFile(req.getFile());
                                 break;
                         }

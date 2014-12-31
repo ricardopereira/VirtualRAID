@@ -33,7 +33,7 @@ import java.util.ArrayList;
 public class ClientController {
     // Constantes
     public static final int TIMEOUT_AUTH = 30; //Segundos
-    public static final int TIMEOUT = 6; //Segundos
+    public static final int TIMEOUT = 15; //Segundos
         
     // Servidor principal
     private Socket mainSocket;
@@ -247,7 +247,7 @@ public class ClientController {
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;
         
-        try {            
+        try {
             // Ligar ao repositório
             try {
                 tempSocket = new Socket(InetAddress.getByName(repositoryAddress), port);
@@ -323,6 +323,7 @@ public class ClientController {
         
         // Repositórios
         Socket tempSocket = null;
+        InputStream in;
         ObjectInputStream oin;
         ObjectOutputStream oout;
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
@@ -334,32 +335,28 @@ public class ClientController {
                 tempSocket = new Socket(InetAddress.getByName(repositoryAddress), port);
                 tempSocket.setSoTimeout(TIMEOUT * 1000);
 
-                oin = new ObjectInputStream(tempSocket.getInputStream());
+                in = tempSocket.getInputStream();
                 oout = new ObjectOutputStream(tempSocket.getOutputStream());
 
                 oout.writeObject(new Request(file, RequestType.REQ_UPLOAD));
                 oout.flush();
-                
-                // Verificar a resposta
-                Response res = (Response) oin.readObject();
-                if (res.getStatus() == ResponseType.RES_OK) {
-                    // Iniciar envio do ficheiro
-                    FileInputStream requestedFileInputStream = null;
-                    try {
-                        requestedFileInputStream = new FileInputStream(localFilesManager.getCurrentDirectoryPath() + file.getName());
-                        while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
-                            oout.write(fileChunck, 0, nbytes);
-                            oout.flush();
-                        }
-                    } catch (FileNotFoundException e) {
-                        System.out.println("Ficheiro " + localFilesManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
-                    } finally {
-                        if (requestedFileInputStream != null)
-                            requestedFileInputStream.close();
+
+                // Iniciar envio do ficheiro
+                FileInputStream requestedFileInputStream = null;
+                try {
+                    requestedFileInputStream = new FileInputStream(localFilesManager.getCurrentDirectoryPath() + file.getName());
+                    performOperationStarted("Iniciar transferência de "+file.getName());
+                    while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
+                        oout.write(fileChunck, 0, nbytes);
+                        oout.flush();
+                        performOperationProgress(nbytes);
                     }
+                } catch (FileNotFoundException e) {
+                    System.out.println("Ficheiro " + localFilesManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
+                } finally {
+                    if (requestedFileInputStream != null)
+                        requestedFileInputStream.close();
                 }
-            } catch (ClassNotFoundException e) {
-                System.out.println("Não foi recebida a resposta para iniciar o envio do ficheiro:\n\t" + e);
             } catch (UnknownHostException e) {
                 System.out.println("Destino desconhecido:\n\t" + e);
             } catch (NumberFormatException e) {

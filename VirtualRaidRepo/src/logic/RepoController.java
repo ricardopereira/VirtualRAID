@@ -26,7 +26,7 @@ import java.util.ArrayList;
  */
 public class RepoController {
     
-    public static final int TIMEOUT = 5; //Segundos
+    public static final int TIMEOUT = 15; //Segundos
     
     // Ligação dos Clientes
     private ServerSocket mainSocket;
@@ -134,15 +134,20 @@ public class RepoController {
         
         while (true) {
             // À espera de pedidos de ligação...
+            System.out.println("A aguardar pedido...\n");
+
             try {
                 clientSocket = mainSocket.accept();
             } catch (IOException e) {
                 System.err.println("Ocorreu um erro enquanto aguardava por um pedido de ligação:\n\t" + e);
                 return; //Termina o servidor
             }
+            
+            System.out.println(clientSocket.getInetAddress().getHostAddress()+":"+clientSocket.getPort() + " - Cliente ligado");
 
             try {
                 clientSocket.setSoTimeout(TIMEOUT * 1000);
+                
                 System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
                 // Cria thread para o cliente
                 ClientThread clientThread = new ClientThread(clientSocket, fileManager);                
@@ -175,9 +180,7 @@ public class RepoController {
                 try {
                     clientSocket.close();
                 } catch (IOException s) {/*Silencio*/}
-            }
-            
-            System.out.println("A aguardar novo cliente");
+            }            
         }
     }
 
