@@ -80,9 +80,6 @@ public class ClientThread extends Thread {
         if (socket == null || file == null)
             return;
         
-        // ToDo: Verificar a situação da lista de ficheiros e o 
-        //VirtualFile vs RepositoryFile
-        
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;
         

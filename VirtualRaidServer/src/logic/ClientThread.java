@@ -100,7 +100,6 @@ public class ClientThread extends Thread {
                 try {
                     while (true) {
                         ois = new ObjectInputStream(socket.getInputStream());
-                        oos = new ObjectOutputStream(socket.getOutputStream());
 
                         // Obtem pedido do utilizador
                         Request req = (Request) ois.readObject();
@@ -113,6 +112,7 @@ public class ClientThread extends Thread {
                         // Devolver resposta
                         switch (req.getOption()) {
                             case REQ_DOWNLOAD:
+                                oos = new ObjectOutputStream(socket.getOutputStream());
                                 repo = serverListener.getRepositoriesList().getItemWithFileAndMinorConnections(req.getFile());
                                 if (repo == null) {
                                     // Ficheiro já não existe na lista
@@ -124,6 +124,7 @@ public class ClientThread extends Thread {
                                 oos.flush();                                    
                                 break;
                             case REQ_UPLOAD:
+                                oos = new ObjectOutputStream(socket.getOutputStream());
                                 repo = serverListener.getRepositoriesList().getItemWithMinorConnections(req.getFile());
                                 if (repo == null) {
                                     // Ficheiro já existe nos repositórios
@@ -228,6 +229,9 @@ public class ClientThread extends Thread {
 
         if (!authenticated)
             return;
+        
+        // Debug
+        System.out.println("filesChangedEvent called");
 
         try {
             oos = new ObjectOutputStream(socket.getOutputStream());

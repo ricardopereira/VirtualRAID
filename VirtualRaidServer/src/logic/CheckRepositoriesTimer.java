@@ -34,7 +34,7 @@ public class CheckRepositoriesTimer extends Thread {
                 
                 // Se o repositório não enviar heartbeat no tempo estipulado,
                 //será removido...
-                if ((timeElapsed/1000) > REPO_TOLERATION) {
+                if ((timeElapsed/1000) > REPO_TOLERATION && item.getNrConnections() <= 0) {
                     // Remove o repositório activo
                     i.remove();
                     hasChanged = true;

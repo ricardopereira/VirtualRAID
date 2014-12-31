@@ -140,14 +140,16 @@ public class ServerController implements Runnable {
         if (getActiveRepositories().contains(repo)) {
             getActiveRepositories().remove(repo);
         }
+        repo.setLastUpdate();
         getActiveRepositories().add(repo);
         
-        // Actualizar os clientes com os ficheiros novos
+        // Actualizar os clientes com os ficheiros novos        
         updateClients();
     }
     
     public void setRepositoryActiveConnections(String address, int port, int nrConnections) {
         int index = getActiveRepositories().indexOf(new Repository(address, port));
+        // Repositório existe?
         if (index >= 0) {
             Repository activeRepository = getActiveRepositories().get(index);
             activeRepository.setNrConnections(nrConnections);

@@ -2,6 +2,7 @@ package logic;
 
 import classes.FilesList;
 import classes.Response;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
@@ -31,10 +32,11 @@ public class ResponsesManager extends Thread {
         
         if (isCanceled)
             return;
-                
+
         while (true) {
-            try {                
+            try {
                 ObjectInputStream ois = new ObjectInputStream(ctrl.getMainSocket().getInputStream());
+
                 // Resposta do Servidor
                 Object resultFromServer = ois.readObject();
                 
@@ -47,17 +49,21 @@ public class ResponsesManager extends Thread {
                     return;
                 
                 if (resultFromServer instanceof FilesList) {
+                    // Debug
+                    System.out.println("<ResponsesManager> FilesList");
                     // Recebeu uma nova lista de ficheiros
                     notifyFilesList((FilesList) resultFromServer);
                 }
                 else if (resultFromServer instanceof Response) {
+                    // Debug
+                    System.out.println("<ResponsesManager> Response");
                     // Recebeu uma resposta de um pedido efectuado
                     notifyResponse((Response) resultFromServer);
-                }
+                }                
+            } catch (EOFException e) {
+                return;
             } catch (ClassNotFoundException | IOException e) {
-                // ToDo: java.net.SocketException: Socket closed
-                System.err.println("Não foi possível receber a resposta do servidor:\n\t" + e);
-                break;
+                System.out.println("<ResponsesManager> Não foi possível receber a resposta do servidor:\n\t" + e);
             }
             
             if (isCanceled)

@@ -165,10 +165,11 @@ public class RepoController {
                     
                     @Override
                     public void onNewFile(RepositoryFile file) {
-                        // ToDo: Adiciona à lista
                         getFiles().add(file);
-                        
+                        // Informa do novo ficheiro
                         filesChangedEvent();
+                        
+                        // ToDo: Replicar ficheiro...
                     }
                 
                 });
@@ -243,8 +244,12 @@ public class RepoController {
         File f = new File(fileManager.getCurrentDirectoryPath() + file.getName());
 
         if (f.delete()) {
+            getFiles().remove(file);
+            // Debug
             System.out.println(file.getName() + " foi eliminado.");
-        }
+            // Informa que a lista foi modificada
+            filesChangedEvent();
+        }        
     }
 
 }
