@@ -37,7 +37,8 @@ public class ReplicateRequest implements Runnable {
         if (socket == null)
             return;
 
-        System.out.println("Enviar pedido de replicação ao servidor: "+file.getName());
+        // Debug
+        //System.out.println("Enviar pedido de replicação ao servidor: "+file.getName());
         
         requestUploadFile(file);
     }

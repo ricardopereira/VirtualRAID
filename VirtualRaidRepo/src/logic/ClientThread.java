@@ -64,12 +64,10 @@ public class ClientThread extends Thread {
                     BaseFile file = req.getFile();
                     
                     // Já existe o mesmo ficheiro?
-                    if (performFileExists(file)) {
+                    if (performCheckFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()))) {
                         out.close();
                         break;
                     }
-
-                    performAddFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
 
                     System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort() + " - Receber ficheiro "+file.getName());
                     receiveFile(req.getFile(), (InputStream) oin);
@@ -161,17 +159,12 @@ public class ClientThread extends Thread {
         performNewFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
     }
     
-    private boolean performFileExists(BaseFile file) {
+    private boolean performCheckFile(RepositoryFile file) {
         if (clientListener != null)
-            return clientListener.onFileExists(file);
+            return clientListener.onCheckFile(file);
         return false;
     }
-    
-    private void performAddFile(RepositoryFile file) {
-        if (clientListener != null)
-            clientListener.onAddFile(file);
-    }
-    
+        
     private void performRemoveFile(RepositoryFile file) {
         if (clientListener != null)
             clientListener.onRemoveFile(file);

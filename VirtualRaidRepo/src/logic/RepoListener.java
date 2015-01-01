@@ -14,8 +14,7 @@ public interface RepoListener {
     void onConnectedClient();
     void onClosingClient();
     
-    boolean onFileExists(BaseFile file);
-    void onAddFile(RepositoryFile file);
+    boolean onCheckFile(RepositoryFile file);
     void onRemoveFile(RepositoryFile file);
     void onNewFile(RepositoryFile file);
     

@@ -170,20 +170,15 @@ public class RepoController {
                     public void onClosingClient() {
                         decrementCurrentConnections();
                     }
-                    
-                    @Override
-                    public void onAddFile(RepositoryFile file) {
-                        getFiles().add(file);
-                    }
-                    
+                                        
                     @Override
                     public void onRemoveFile(RepositoryFile file) {
                         getFiles().remove(file);
                     }
                     
                     @Override
-                    public boolean onFileExists(BaseFile file) {
-                        return getFiles().contains(file);
+                    public boolean onCheckFile(RepositoryFile file) {
+                        return checkFile(file);
                     }
                     
                     @Override
@@ -205,6 +200,14 @@ public class RepoController {
                 } catch (IOException s) {/*Silencio*/}
             }            
         }
+    }
+    
+    private synchronized boolean checkFile(RepositoryFile file) {
+        boolean result = getFiles().contains(file);
+        if (!result) {
+            getFiles().add(file);
+        }
+        return result;
     }
 
     public String getServerAddress() {
@@ -319,7 +322,10 @@ public class RepoController {
                 FileInputStream requestedFileInputStream = null;
                 try {
                     requestedFileInputStream = new FileInputStream(fileManager.getCurrentDirectoryPath() + file.getName());
-                    System.out.println("Replicação de "+file.getName());
+                    
+                    // Debug
+                    //System.out.println("Replicação de "+file.getName());
+                    
                     while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
                         oout.write(fileChunck, 0, nbytes);
                         oout.flush();
@@ -341,8 +347,8 @@ public class RepoController {
             } catch (IOException e) {
                 System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
             }
-            // Terminou a transferência
-            System.out.println("Concluído");
+            // Debug: Terminou a transferência
+            //System.out.println("Concluído");
         } finally {
             if (tempSocket != null) {
                 try {
