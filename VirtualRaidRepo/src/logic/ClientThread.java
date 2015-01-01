@@ -1,5 +1,6 @@
 package logic;
 
+import classes.BaseFile;
 import classes.Common;
 import classes.FileManager;
 import classes.Request;
@@ -59,7 +60,18 @@ public class ClientThread extends Thread {
                     break;
                 case REQ_UPLOAD:
                     out = socket.getOutputStream();
-                    System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort() + " - Receber ficheiro "+req.getFile().getName());
+                    
+                    BaseFile file = req.getFile();
+                    
+                    // Já existe o mesmo ficheiro?
+                    if (performFileExists(file)) {
+                        out.close();
+                        break;
+                    }
+
+                    performAddFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
+
+                    System.out.println(socket.getInetAddress().getHostAddress()+":"+socket.getPort() + " - Receber ficheiro "+file.getName());
                     receiveFile(req.getFile(), (InputStream) oin);
                     out.close();
                     break;
@@ -105,7 +117,7 @@ public class ClientThread extends Thread {
     {
         if (socket == null || file == null)
             return;
-        
+                
         FileOutputStream localFileOutputStream = null;
         byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
         int nbytes;
@@ -117,6 +129,7 @@ public class ClientThread extends Thread {
                     localFileOutputStream = new FileOutputStream(filesManager.getCurrentDirectoryPath() + file.getName());
                 } catch (IOException e) {
                     System.out.println("Não foi possível criar o ficheiro "+filesManager.getCurrentDirectoryPath() + file.getName());
+                    performRemoveFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
                     return;
                 }
                 
@@ -134,6 +147,7 @@ public class ClientThread extends Thread {
             }
         } catch (IOException e) {
             System.out.println("Erro de E/S:\n\t"+e);
+            performRemoveFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
         } finally {
             if (localFileOutputStream != null) {
                 try {
@@ -145,6 +159,22 @@ public class ClientThread extends Thread {
         
         // Refresh files
         performNewFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
+    }
+    
+    private boolean performFileExists(BaseFile file) {
+        if (clientListener != null)
+            return clientListener.onFileExists(file);
+        return false;
+    }
+    
+    private void performAddFile(RepositoryFile file) {
+        if (clientListener != null)
+            clientListener.onAddFile(file);
+    }
+    
+    private void performRemoveFile(RepositoryFile file) {
+        if (clientListener != null)
+            clientListener.onRemoveFile(file);
     }
     
     private void performNewFile(RepositoryFile file) {

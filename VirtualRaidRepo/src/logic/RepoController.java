@@ -172,8 +172,22 @@ public class RepoController {
                     }
                     
                     @Override
-                    public void onNewFile(RepositoryFile file) {
+                    public void onAddFile(RepositoryFile file) {
                         getFiles().add(file);
+                    }
+                    
+                    @Override
+                    public void onRemoveFile(RepositoryFile file) {
+                        getFiles().remove(file);
+                    }
+                    
+                    @Override
+                    public boolean onFileExists(BaseFile file) {
+                        return getFiles().contains(file);
+                    }
+                    
+                    @Override
+                    public void onNewFile(RepositoryFile file) {
                         // Informa do novo ficheiro
                         filesChangedEvent();
                         // REPLICAR

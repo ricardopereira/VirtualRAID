@@ -20,7 +20,7 @@ public class ServerController implements Runnable {
     
     // Constantes
     public static final int TIMEOUT_AUTH = 60; //1 minuto
-    public static final int TIMEOUT_CLIENT = 300; //5 minutos
+    public static final int TIMEOUT_CLIENT = 1800; //30 minutos
     
     // Ligação dos Clientes
     private ServerSocket mainSocket;
