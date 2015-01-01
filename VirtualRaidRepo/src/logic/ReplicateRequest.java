@@ -19,35 +19,27 @@ public class ReplicateRequest implements Runnable {
     
     private final RepoController ctrl;
     private final BaseFile file;
-    private DatagramSocket socket = null;
+    private DatagramSocket socket;
     
     private boolean isCanceled = false;
     
-    public ReplicateRequest(RepoController ctrl, BaseFile file) {
+    public ReplicateRequest(RepoController ctrl, BaseFile file, DatagramSocket socket) {
         this.ctrl = ctrl;
         this.file = file;
+        this.socket = socket;
     }
     
     @Override
     public void run() {
         if (isCanceled)
-            return;
-        
-        try {
-            socket = new DatagramSocket();
-        } catch(SocketException e) {
-            System.out.println("Não foi possível replicar o ficheiro "+file.getName()+":\n\t" + e);
-        }
+            return;        
         
         if (socket == null)
             return;
 
         System.out.println("Enviar pedido de replicação ao servidor: "+file.getName());
-        try {
-            requestUploadFile(file);
-        } finally {
-            disconnect();
-        }
+        
+        requestUploadFile(file);
     }
     
     private ResponseType requestUploadFile(BaseFile file) {
@@ -60,9 +52,7 @@ public class ReplicateRequest implements Runnable {
         }
         
         DatagramPacket packet;
-        ObjectInputStream in;
         ObjectOutputStream out;
-        Object obj;
         ByteArrayOutputStream buff;
         
         try {
@@ -80,9 +70,16 @@ public class ReplicateRequest implements Runnable {
             packet.setData(buff.toByteArray());
             packet.setLength(buff.size());
             
+            // Interpretar o pedido
+            ReplicateThread replicateThread = new ReplicateThread(ctrl,socket);
+            // Envia pedido
             socket.send(packet);
+            // Esperar pela resposta do servidor com a indicação do repositório 
+            //onde é possível para replicar
+            replicateThread.start();
         } catch (IOException e) {
-            System.out.println("Não foi possível replicar o ficheiro "+file.getName()+":\n\t" + e);
+            disconnect();
+            System.out.println("<ReplicateRequest> Não foi possível replicar o ficheiro "+file.getName()+":\n\t" + e);
             return ResponseType.RES_FAILED;
         }
         return ResponseType.RES_OK;

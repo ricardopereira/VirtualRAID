@@ -5,10 +5,15 @@ import classes.Common;
 import classes.FileManager;
 import classes.Repository;
 import classes.RepositoryFile;
+import classes.Request;
 import classes.VirtualFile;
+import enums.RequestType;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
@@ -17,6 +22,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 /**
@@ -170,7 +177,7 @@ public class RepoController {
                         // Informa do novo ficheiro
                         filesChangedEvent();
                         // REPLICAR
-                        replicateFile(file);
+                        requestReplicateFile(file);
                     }
                 
                 });
@@ -242,6 +249,9 @@ public class RepoController {
     }
     
     public void deleteFile(BaseFile file) {
+        if (fileManager == null)
+            return;
+        
         File f = new File(fileManager.getCurrentDirectoryPath() + file.getName());
 
         if (f.delete()) {
@@ -253,8 +263,80 @@ public class RepoController {
         }        
     }
     
-    private void replicateFile(BaseFile file) {
-        new Thread(new ReplicateRequest(this, file)).start();
+    public void requestReplicateFile(BaseFile file) {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
+        } catch(SocketException e) {
+            System.out.println("Não foi possível replicar o ficheiro "+file.getName()+":\n\t" + e);
+        }
+        
+        if (socket == null)
+            return;
+        
+        new Thread(new ReplicateRequest(this, file, socket)).start();
+    }
+    
+    public void replicateFile(String repositoryAddress, int port, VirtualFile file) {
+        if (file == null || fileManager == null)
+            return;
+                
+        // Repositórios
+        Socket tempSocket = null;
+        InputStream in;
+        ObjectInputStream oin;
+        ObjectOutputStream oout;
+        byte []fileChunck = new byte[Common.FILECHUNK_MAX_SIZE];
+        int nbytes;
+        
+        try {            
+            // Ligar ao repositório
+            try {
+                tempSocket = new Socket(InetAddress.getByName(repositoryAddress), port);
+                tempSocket.setSoTimeout(TIMEOUT * 1000);
+
+                in = tempSocket.getInputStream();
+                oout = new ObjectOutputStream(tempSocket.getOutputStream());
+
+                oout.writeObject(new Request(file, RequestType.REQ_UPLOAD));
+                oout.flush();
+
+                // Iniciar envio do ficheiro
+                FileInputStream requestedFileInputStream = null;
+                try {
+                    requestedFileInputStream = new FileInputStream(fileManager.getCurrentDirectoryPath() + file.getName());
+                    System.out.println("Replicação de "+file.getName());
+                    while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
+                        oout.write(fileChunck, 0, nbytes);
+                        oout.flush();
+                    }
+                } catch (FileNotFoundException e) {
+                    System.out.println("Ficheiro " + fileManager.getCurrentDirectoryPath() + file.getName() + " aberto para leitura.");
+                } finally {
+                    if (requestedFileInputStream != null)
+                        requestedFileInputStream.close();
+                }
+            } catch (UnknownHostException e) {
+                System.out.println("Destino desconhecido:\n\t" + e);
+            } catch (NumberFormatException e) {
+                System.out.println("O porto do servidor deve ser um inteiro positivo:\n\t" + e);
+            } catch (SocketTimeoutException e) {
+                System.out.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+            } catch (SocketException e) {
+                System.out.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
+            }
+            // Terminou a transferência
+            System.out.println("Concluído");
+        } finally {
+            if (tempSocket != null) {
+                try {
+                    tempSocket.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
 
 }

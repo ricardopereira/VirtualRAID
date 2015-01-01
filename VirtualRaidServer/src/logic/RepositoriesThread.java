@@ -3,11 +3,19 @@ package logic;
 import classes.Common;
 import classes.Heartbeat;
 import classes.Repository;
+import classes.Request;
+import classes.Response;
+import classes.VirtualFile;
+import enums.RequestType;
+import enums.ResponseType;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 
 /**
@@ -76,14 +84,60 @@ public class RepositoriesThread extends Thread {
                         // Mostra ficheiros do repositório ligado
                         System.out.println(packet.getAddress().getHostAddress()+":"+packet.getPort()+" - "+((Repository) obj).toString());
                     }
+                    else if (obj != null && obj instanceof Request) {
+                        // Pedido de UP_LOAD do repositório (REPLICAÇÃO)
+                        Request req = (Request) obj;
+                        if (req.getOption() == RequestType.REQ_UPLOAD) {
+                            // Procurar um repositório
+                            Repository repo = ctrl.getActiveRepositories().getItemWithMinorConnections(req.getFile());
+                            if (repo == null) {
+                                // Não existe mais nenhum repositório
+                                sendResponse(packet, new Response(ResponseType.RES_CANCELED, "Replicação", req));
+                            }
+                            else {
+                                sendResponse(packet, new Response(repo.getAddress(),repo.getPort(),req));
+                            }
+                        }
+                        else {
+                            sendResponse(packet, new Response(ResponseType.RES_INVALID, "Replicação", req));
+                        }
+                    }
                 } catch (ClassNotFoundException | IOException e) {
-                    System.out.println("Impossibilidade de aceder ao conteudo da mensagem recebida!");
+                    System.out.println("<RepositoriesThread> Impossibilidade de aceder ao conteudo da mensagem recebida:\n\t"+e);
                 }
             }
         } catch (IOException e) {
             if (!repoSocket.isClosed()) {
                 repoSocket.close();
             }
+        }
+    }
+    
+    private void sendResponse(DatagramPacket packet, Response res) {
+        if (repoSocket == null)
+            return;
+        
+        ObjectOutputStream out;
+        ByteArrayOutputStream buff;
+        
+        try {
+            packet.setData(new byte[Common.UDPOBJECT_MAX_SIZE]);
+            packet.setLength(Common.UDPOBJECT_MAX_SIZE);
+
+            buff = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(buff);
+
+            out.writeObject(res);
+            out.flush();
+            out.close();
+
+            packet.setData(buff.toByteArray());
+            packet.setLength(buff.size());
+            
+            // Envia resposta
+            repoSocket.send(packet);
+        } catch (IOException e) {
+            System.out.println("<RepositoriesThread> Não foi possível respsota:\n\t" + e);
         }
     }
     

@@ -13,7 +13,8 @@ public enum ResponseType {
     RES_NOPERMISSION, 
     RES_CANCELED, 
     RES_PROGRESS,
-    RES_ALREADYEXIST;
+    RES_ALREADYEXIST,
+    RES_INVALID;
     
     public static final String[] labels = {
         "Erro a obter resposta", 
@@ -22,6 +23,7 @@ public enum ResponseType {
         "Sem permissões para o ficheiro", 
         "Cancelado", 
         "",
-        "Ficheiro já existe"
+        "Ficheiro já existe",
+        "Pedido inválido"
     };
 }
