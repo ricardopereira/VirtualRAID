@@ -45,6 +45,7 @@ public class CheckRepositoriesTimer extends Thread {
             
             if (hasChanged) {
                 ctrl.updateClients();
+                ctrl.removeActiveRepository();
             }
         }
     }

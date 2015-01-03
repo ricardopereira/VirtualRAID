@@ -1,11 +1,23 @@
 package logic;
 
+import classes.RepositoriesList;
+import classes.Client;
 import classes.FilesList;
+import classes.RMIApplicationInterface;
+import classes.RMIServiceInterface;
 import classes.Repository;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.ExportException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
 /**
@@ -14,7 +26,7 @@ import java.util.ArrayList;
  * 
  * @author Team
  */
-public class ServerController implements Runnable {
+public class ServerController extends UnicastRemoteObject implements RMIServiceInterface, Runnable {
     
     public static final String FILE_CREDENTIALS = "credenciais.txt";
     
@@ -36,8 +48,10 @@ public class ServerController implements Runnable {
     private RepositoriesList activeRepositories;
     // Lista de clientes activos
     private ArrayList<ClientThread> activeClients;
+    // Lista de Monitores
+    private ArrayList<RMIApplicationInterface> activeMonitors;
     
-    public ServerController(int listenPort) {
+    public ServerController(int listenPort) throws RemoteException {
         this.port = listenPort;
     }
     
@@ -143,8 +157,18 @@ public class ServerController implements Runnable {
         repo.setLastUpdate();
         getActiveRepositories().add(repo);
         
-        // Actualizar os clientes com os ficheiros novos        
+        // Teste
+        notifyObserversListRepo();
+        System.out.println("Teste RMI");
+        
+        // Actualizar os clientes com os ficheiros novos
         updateClients();
+    }
+    
+    public void removeActiveRepository() {
+        // Teste
+        notifyObserversListRepo();
+        System.out.println("Teste RMI");
     }
     
     public void setRepositoryActiveConnections(String address, int port, int nrConnections) {
@@ -168,18 +192,99 @@ public class ServerController implements Runnable {
         return activeRepositories;
     }
     
+    public ArrayList<Client> getActiveUsers() {
+        ArrayList<Client> clientList = new ArrayList<>();
+        for (ClientThread clientThread : getActiveClients())
+            clientList.add(clientThread.getClient());
+        return clientList;
+    }
+    
     public synchronized ArrayList<ClientThread> getActiveClients() {
         if (activeClients == null)
             activeClients = new ArrayList<>();
         return activeClients;
     }
-        
+    
     public FilesList getAllFiles() {
         FilesList allFiles = new FilesList();
         for (Repository item : getActiveRepositories()) {
             allFiles.addRepositoryFiles(item);
         }    
         return allFiles;
+    }
+
+    @Override
+    public RepositoriesList getRMIActiveRepositories() throws RemoteException {
+        return getActiveRepositories();
+    }
+
+    @Override
+    public FilesList getRMIAllFiles() throws RemoteException {
+        return getAllFiles();
+    }
+
+    @Override
+    public ArrayList<Client> getRMIActiveUsers() throws RemoteException {
+        return getActiveUsers();
+    }
+    
+    @Override
+    public void addObserver(RMIApplicationInterface app) throws RemoteException {
+        getActiveMonitors().add(app);
+    }
+
+    public ArrayList<RMIApplicationInterface> getActiveMonitors() {
+        if (activeMonitors == null)
+            activeMonitors = new ArrayList<>();
+        return activeMonitors;
+    }
+    
+    public void notifyObserversListFiles() {
+        for (int i=0; i<getActiveMonitors().size(); i++)
+            try {
+                getActiveMonitors().get(i).updateListFiles();
+            } catch (RemoteException e) {
+                //System.out.println("Não foi possível fazer notifyObserversListFiles: "+e);
+            }
+    }
+    
+    public void notifyObserversListRepo() {
+        for (int i=0; i<getActiveMonitors().size(); i++)
+            try {
+                getActiveMonitors().get(i).updateListRepo();
+            } catch (RemoteException e) {
+                //System.out.println("Não foi possível fazer notifyObserversListRepo: "+e);
+            }
+    }
+     
+    public void notifyObserversListUsers() {
+        for (int i=0; i<getActiveMonitors().size(); i++)
+            try {
+                getActiveMonitors().get(i).updateListUsers();
+            } catch (RemoteException e) {
+                //System.out.println("Não foi possível fazer notifyObserversListUsers: "+e);
+            }
+    }
+    
+    public void startRMI() {
+        try {
+            Registry registry;
+            try {
+                registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+            } catch (ExportException e) {
+                System.out.println("Registry já é usado no porto " + Registry.REGISTRY_PORT);
+                registry = LocateRegistry.getRegistry();
+            }
+            try {
+                Naming.bind("RMIService", this);
+            } catch (RemoteException | AlreadyBoundException | MalformedURLException e) {
+                System.err.println("Ocorreu um erro ao registar o serviço: " + e);
+            }
+        } catch (RemoteException re) {
+            System.err.println("Remote Error - " + re);
+        } catch (Exception e) {
+            System.err.println("Error - " + e);
+        }
     }
     
 }

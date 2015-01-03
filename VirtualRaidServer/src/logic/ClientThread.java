@@ -1,6 +1,7 @@
 
 package logic;
 
+import classes.Client;
 import classes.Common;
 import classes.Login;
 import classes.Repository;
@@ -34,6 +35,7 @@ public class ClientThread extends Thread {
 
     private Socket socket;
     private boolean authenticated = false;
+    private Client client = new Client();
     
     private ServerListener serverListener = null;
     
@@ -71,6 +73,8 @@ public class ClientThread extends Thread {
                     // Verificar login
                     if (isValid(login)) {
                         authenticated = true;
+                        client.setUsername(login.getUsername());
+                        
                         oos.writeObject(authenticated);
                         oos.flush();
                         // Debug
@@ -232,7 +236,7 @@ public class ClientThread extends Thread {
         
         // Debug
         //System.out.println("filesChangedEvent called");
-
+        
         try {
             oos = new ObjectOutputStream(socket.getOutputStream());
             // Enviar lista de ficheiros
@@ -244,4 +248,9 @@ public class ClientThread extends Thread {
             System.out.println("<Server:ClientThread> Ocorreu um erro de ligação:\n\t" + e);
         }
     }
+
+    public Client getClient() {
+        return client;
+    }
+    
 }
