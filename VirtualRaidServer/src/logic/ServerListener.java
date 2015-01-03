@@ -17,5 +17,5 @@ public interface ServerListener {
     RepositoriesList getRepositoriesList();
     
     FilesList getFilesList();
-    
+    void notifyFileChanged();
 }

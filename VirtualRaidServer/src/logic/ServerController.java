@@ -119,12 +119,15 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
 
                 @Override
                 public void onConnectedClient() {
-
+                    // RMI
+                    notifyObserversListUsers();
                 }
 
                 @Override
                 public void onClosingClient() {
                     getActiveClients().remove(clientThread);
+                    // RMI
+                    notifyObserversListUsers();
                 }
                 
                 @Override
@@ -135,6 +138,11 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
                 @Override
                 public RepositoriesList getRepositoriesList() {
                     return getActiveRepositories();
+                }
+                
+                @Override
+                public void notifyFileChanged() {
+                    notifyObserversListFiles();
                 }
 
             });
@@ -157,18 +165,16 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
         repo.setLastUpdate();
         getActiveRepositories().add(repo);
         
-        // Teste
+        // RMI
         notifyObserversListRepo();
-        System.out.println("Teste RMI");
         
         // Actualizar os clientes com os ficheiros novos
         updateClients();
     }
     
     public void removeActiveRepository() {
-        // Teste
+        // RMI
         notifyObserversListRepo();
-        System.out.println("Teste RMI");
     }
     
     public void setRepositoryActiveConnections(String address, int port, int nrConnections) {

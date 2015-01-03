@@ -236,6 +236,7 @@ public class ClientThread extends Thread {
         
         // Debug
         //System.out.println("filesChangedEvent called");
+        serverListener.notifyFileChanged();
         
         try {
             oos = new ObjectOutputStream(socket.getOutputStream());
