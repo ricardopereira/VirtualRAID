@@ -22,22 +22,43 @@ public class RMIApplication extends UnicastRemoteObject implements RMIApplicatio
     @Override
     public void updateListRepo()throws RemoteException{
         ArrayList<Repository> repo = serviceInterface.getRMIActiveRepositories();
-        System.out.println("Existem " +repo.size() + " repositorios");
+       // System.out.println("Existem " +repo.size() + " repositorios");
+       if (repo.isEmpty())
+            System.out.println("Nao existem repositorios ativos!");
+       else{
+            System.out.println("REPOSITORIOS ATIVOS: ");
+            for (int i = 0; i < repo.size(); i++) {
+                System.out.println("Repositorio "+ i + " " + repo.get(i).getAddressAndPort());
+            } 
+       }
     }
     
     @Override
     public void updateListFiles()throws RemoteException {
         FilesList files = serviceInterface.getRMIAllFiles();
-        System.out.println("Existem " + files.size()+ " ficheiros");
+        //System.out.println("Existem " + files.size()+ " ficheiros");
+        if (files.isEmpty())
+            System.out.println("Nao existem ficheiros!");
+        else {
+            System.out.println("FICHEIROS EXISTENTES: ");
+            for (int i = 0; i < files.size(); i++) {
+                System.out.println(files.get(i).toString());
+            } 
+        }
     }
     
     @Override
-    public void updateListUsers()throws RemoteException{
+    public void updateListUsers() throws RemoteException {
         ArrayList<Client> cli = serviceInterface.getRMIActiveUsers();
-        System.out.println("Existem " + cli.size()+ " clientes");
+        if (cli.isEmpty()) 
+            System.out.println("Nao existem utilizadores conectados!");
+        else {
+            System.out.println("UTILIZADORES CONECTADOS: ");
+            for (int i = 0; i < cli.size(); i++) {
+                System.out.println(cli.get(i).getUsername());
+            }
+        }
     }
-
-    
     public static void main(String[] args){
 
         try {
@@ -53,11 +74,11 @@ public class RMIApplication extends UnicastRemoteObject implements RMIApplicatio
             serviceInterface.addObserver(appRMI);
 
             FilesList files = serviceInterface.getRMIAllFiles();
-            System.out.println("Existem " + files.size() + " ficheiros");
+            //System.out.println("Existem " + files.size() + " ficheiros");
             ArrayList<Repository> repo  = serviceInterface.getRMIActiveRepositories();
-            System.out.println("Existem " + repo.size() + " repositorios");
+           // System.out.println("Existem " + repo.size() + " repositorios");
             ArrayList<Client> cli = serviceInterface.getRMIActiveUsers();
-            System.out.println("Existem " + cli.size() + " clientes");
+           // System.out.println("Existem " + cli.size() + " clientes");
 
         } catch (RemoteException e) {
             System.out.println("Remote error - " + e);
