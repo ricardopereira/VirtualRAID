@@ -16,11 +16,11 @@ public class RMIApplication extends UnicastRemoteObject implements RMIApplicatio
     public static RMIApplication appRMI;
     public static RMIServiceInterface serviceInterface;
     
-    public RMIApplication()throws RemoteException{}
+    public RMIApplication() throws RemoteException{}
     
     
     @Override
-    public void updateListRepo()throws RemoteException{
+    public void updateListRepo() throws RemoteException {
         ArrayList<Repository> repo = serviceInterface.getRMIActiveRepositories();
        // System.out.println("Existem " +repo.size() + " repositorios");
        if (repo.isEmpty())
@@ -34,7 +34,7 @@ public class RMIApplication extends UnicastRemoteObject implements RMIApplicatio
     }
     
     @Override
-    public void updateListFiles()throws RemoteException {
+    public void updateListFiles() throws RemoteException {
         FilesList files = serviceInterface.getRMIAllFiles();
         //System.out.println("Existem " + files.size()+ " ficheiros");
         if (files.isEmpty())
@@ -59,7 +59,7 @@ public class RMIApplication extends UnicastRemoteObject implements RMIApplicatio
             }
         }
     }
-    public static void main(String[] args){
+    public static void main(String[] args) {
 
         try {
             //procura objeto remoto
@@ -87,7 +87,6 @@ public class RMIApplication extends UnicastRemoteObject implements RMIApplicatio
         } catch (Exception e) {
             System.out.println("Error - " + e);
         }
-
 
     }
 }

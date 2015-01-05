@@ -50,13 +50,15 @@ public class ResponsesManager extends Thread {
                 
                 if (resultFromServer instanceof FilesList) {
                     // Debug
-                    System.out.println("<ResponsesManager> FilesList");
+                    //System.out.println("<ResponsesManager> FilesList");
+                    
                     // Recebeu uma nova lista de ficheiros
                     notifyFilesList((FilesList) resultFromServer);
                 }
                 else if (resultFromServer instanceof Response) {
                     // Debug
-                    System.out.println("<ResponsesManager> Response");
+                    //System.out.println("<ResponsesManager> Response");
+                    
                     // Recebeu uma resposta de um pedido efectuado
                     notifyResponse((Response) resultFromServer);
                 }                

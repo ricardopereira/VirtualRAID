@@ -1,8 +1,10 @@
-copy ..\VirtualRaidClient\dist\VirtualRaidClient.jar 
-copy ..\VirtualRaidRepo\dist\VirtualRaidRepo.jar 
-copy ..\VirtualRaidServer\dist\VirtualRaidServer.jar 
-copy ..\VirtualRaidLibrary\dist\VirtualRaidLibrary.jar
-copy ..\VirtualRaidServer\src\credenciais.txt
+mkdir ..\..\bin\
+copy ..\..\VirtualRaidClient\dist\VirtualRaidClient.jar ..\..\bin\
+copy ..\..\VirtualRaidRepo\dist\VirtualRaidRepo.jar ..\..\bin\
+copy ..\..\VirtualRaidServer\dist\VirtualRaidServer.jar ..\..\bin\
+copy ..\..\VirtualRaidLibrary\dist\VirtualRaidLibrary.jar ..\..\bin\
+copy ..\..\VirtualRaidRMI\dist\VirtualRaidRMI.jar ..\..\bin\
+copy ..\..\VirtualRaidServer\src\credenciais.txt ..\..\bin\
 mkdir C:\RAID
 mkdir C:\RAID\Repo1
 type NUL > C:\RAID\Repo1\PowerRangers.txt

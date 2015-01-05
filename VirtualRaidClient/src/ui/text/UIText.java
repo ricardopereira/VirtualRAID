@@ -182,6 +182,8 @@ public class UIText {
                 }
                 break;
             case OPT_UPLOAD:
+                // Refrescar a lista de ficheiros locais
+                ctrl.refreshLocalFilesList();
                 // Imprime a lista de ficheiros locais
                 printLocalFiles();
                 System.out.println("Escolha o ficheiro para fazer upload: ");
@@ -297,7 +299,10 @@ public class UIText {
         }
         else {
             System.out.println("Sem ficheiros.\n");
-        }        
+        }
+        
+        // Debug
+        //System.out.println("<PendingChoice>");
 
         // Só imprime o Menu se não seleccionou nenhuma opção
         if (currentMenuOption == MenuOptions.OPT_NONE) {
