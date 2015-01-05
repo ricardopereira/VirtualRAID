@@ -36,7 +36,7 @@ public class ClientThread extends Thread {
 
     private Socket socket;
     private boolean authenticated = false;
-    private Client client = new Client();
+    private Client client;
     
     private ServerListener serverListener = null;
     
@@ -74,6 +74,8 @@ public class ClientThread extends Thread {
                     // Verificar login
                     if (isValid(login)) {
                         authenticated = true;
+                        
+                        client = new Client();
                         client.setUsername(login.getUsername());
                         
                         oos.writeObject(authenticated);
@@ -124,7 +126,7 @@ public class ClientThread extends Thread {
                                 repo = serverListener.getRepositoriesList().getItemWithFileAndMinorConnections(req.getFile());
                                 if (repo == null) {
                                     // Ficheiro já não existe na lista
-                                    oos.writeObject(new Response(ResponseType.RES_NOFILE,"Sem repositório com o ficheiro "+req.getFile().getName(),req));
+                                    oos.writeObject(new Response(ResponseType.RES_NOFILE,"Sem repositorio com o ficheiro "+req.getFile().getName(),req));
                                 }
                                 else {
                                     oos.writeObject(new Response(repo.getAddress(),repo.getPort(),req));
@@ -139,7 +141,7 @@ public class ClientThread extends Thread {
                                 repo = serverListener.getRepositoriesList().getItemWithMinorConnections(req.getFile());
                                 if (repo == null) {
                                     // Ficheiro já existe nos repositórios
-                                    oos.writeObject(new Response(ResponseType.RES_ALREADYEXIST,"Sem repositório para enviar o ficheiro "+req.getFile().getName(),req));
+                                    oos.writeObject(new Response(ResponseType.RES_ALREADYEXIST,"Sem repositorio para enviar o ficheiro "+req.getFile().getName(),req));
                                 }
                                 else {
                                     oos.writeObject(new Response(repo.getAddress(),repo.getPort(),req));
@@ -164,9 +166,9 @@ public class ClientThread extends Thread {
         } catch (EOFException e) {
             // Cliente fechou a ligação
         } catch (SocketTimeoutException e) {
-            System.out.println("<Server:ClientThread> Ligação terminou: " + e);
+            System.out.println("<Server:ClientThread> Ligacao terminou: " + e);
         } catch(IOException e){
-            System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
+            System.err.println("<Server:ClientThread> Ocorreu um erro de ligacao: " + e);
         } finally {
             // Debug
             System.out.println(socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + " - Cliente foi desligado");
@@ -206,11 +208,17 @@ public class ClientThread extends Thread {
             
             socket.send(packet);
         } catch (IOException e) {
-            System.out.println("<Server:ClientThread> Ocorreu um erro ao enviar pedido de eliminação de ficheiro:\n\t" + e);
+            System.out.println("<Server:ClientThread> Ocorreu um erro ao enviar pedido de eliminacao de ficheiro:\n\t" + e);
         }
     }
     
-    private static boolean isValid(Login login) {
+    private boolean isValid(Login login) {
+        if (serverListener == null || login == null)
+            return false;
+        
+        if (serverListener.isClientOnline(login.getUsername()))
+            return false;
+        
         String credentialsPath = ServerController.FILE_CREDENTIALS;
         try {
             File runnablePath = new File(ClientThread.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
@@ -229,7 +237,7 @@ public class ClientThread extends Thread {
                 }
             }
         } catch(FileNotFoundException e) {
-            System.err.println("<Server:ClientThread> Ficheiro "+ServerController.FILE_CREDENTIALS+" não existe:\n\t"+e.getMessage());
+            System.err.println("<Server:ClientThread> Ficheiro "+ServerController.FILE_CREDENTIALS+" nao existe:\n\t"+e.getMessage());
         } catch (URISyntaxException ex) {
 
         }
@@ -259,14 +267,18 @@ public class ClientThread extends Thread {
             oos.writeObject(serverListener.getFilesList());
             oos.flush();
         } catch (SocketTimeoutException e) {
-            System.out.println("<Server:ClientThread> Ligação terminou:\n\t" + e);
+            System.out.println("<Server:ClientThread> Ligacao terminou:\n\t" + e);
         } catch(IOException e){
-            System.out.println("<Server:ClientThread> Ocorreu um erro de ligação:\n\t" + e);
+            System.out.println("<Server:ClientThread> Ocorreu um erro de ligacao:\n\t" + e);
         }
     }
 
     public Client getClient() {
         return client;
+    }
+    
+    public boolean isAuthenticated() {
+        return client != null;
     }
     
 }

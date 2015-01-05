@@ -12,7 +12,7 @@ public class Main {
      */
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Repositório não foi iniciado:\n\t- Argumentos <diretoria> <porto_escuta>");
+            System.out.println("Repositorio nao foi iniciado:\n\t- Argumentos <diretoria> <porto_escuta>");
             return;
         }
         // Arguments
@@ -31,7 +31,7 @@ public class Main {
         }
         
         if (fm == null) {
-            System.out.println("Não foi possível obter controlo dos ficheiros.");
+            System.out.println("Nao foi possivel obter controlo dos ficheiros.");
             return;
         }
         
@@ -39,7 +39,7 @@ public class Main {
         try {
             ctrl = new RepoController(InetAddress.getLocalHost().getHostAddress(), port, fm);
         } catch (UnknownHostException e) {
-            System.err.println("Não foi possível obter o endereço local.");
+            System.err.println("Nao foi possivel obter o endereco local.");
         }
 
         System.out.println("Ficheiros:\n"+ctrl.getRepository().toString());
@@ -47,10 +47,10 @@ public class Main {
         if (ctrl == null)
             return;
                 
-        System.out.println("À procura do servidor\n...");
+        System.out.println("A procura do servidor\n...");
         // Procura o servidor
         if (ctrl.findServer()) {
-            System.out.println("Iniciar ligação com: "+ctrl.getServerAddress()+":"+ctrl.getServerPort());
+            System.out.println("Iniciar ligacao com: "+ctrl.getServerAddress()+":"+ctrl.getServerPort());
         }
         else {
             System.out.println("Nenhum servidor encontrado.");
@@ -60,7 +60,7 @@ public class Main {
         // Iniciar recepção de clientes
         //(Bloqueante)
         ctrl.startListeningClients();
-        System.out.println("Repositório vai terminar...");
+        System.out.println("Repositorio vai terminar...");
     }
 
 }

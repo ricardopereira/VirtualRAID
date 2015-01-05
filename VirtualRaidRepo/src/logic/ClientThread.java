@@ -126,7 +126,7 @@ public class ClientThread extends Thread {
                 try {
                     localFileOutputStream = new FileOutputStream(filesManager.getCurrentDirectoryPath() + file.getName());
                 } catch (IOException e) {
-                    System.out.println("Não foi possível criar o ficheiro "+filesManager.getCurrentDirectoryPath() + file.getName());
+                    System.out.println("Nao foi possivel criar o ficheiro "+filesManager.getCurrentDirectoryPath() + file.getName());
                     performRemoveFile(new RepositoryFile(file.getName(), file.getSizeBytes(), file.getDateModified()));
                     return;
                 }

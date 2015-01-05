@@ -22,7 +22,7 @@ public class BaseFile implements Serializable {
     
     @Override
     public String toString() {
-        return name + ", Tamanho: " + getSizeKb() + "Kb, Modificado em: " + getDateModified();
+        return name + ", Tam: " + getSizeKb() + "Kb, Modificado: " + getDateModified();
     }
 
     @Override

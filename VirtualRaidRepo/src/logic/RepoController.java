@@ -104,7 +104,7 @@ public class RepoController {
         try {
             mainSocket = new ServerSocket(self.getPort());
         } catch (SocketException e) {
-            System.err.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+            System.err.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
             return;
         } catch (IOException e) {
             System.err.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
@@ -147,7 +147,7 @@ public class RepoController {
             try {
                 clientSocket = mainSocket.accept();
             } catch (IOException e) {
-                System.err.println("Ocorreu um erro enquanto aguardava por um pedido de ligação:\n\t" + e);
+                System.err.println("Ocorreu um erro enquanto aguardava por um pedido de ligacao:\n\t" + e);
                 return; //Termina o servidor
             }
             
@@ -156,7 +156,7 @@ public class RepoController {
             try {
                 clientSocket.setSoTimeout(TIMEOUT * 1000);
                 
-                System.out.println("Foi estabelecida ligação a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
+                System.out.println("Foi estabelecida ligacao a "+ clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " no porto " + clientSocket.getLocalPort());
                 // Cria thread para o cliente
                 ClientThread clientThread = new ClientThread(clientSocket, fileManager);                
                 clientThread.setClientListener(new RepoListener() {
@@ -193,7 +193,7 @@ public class RepoController {
                 // Inicia thread
                 clientThread.start();
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro na ligação com o cliente: \n\t" + e);
+                System.out.println("Ocorreu um erro na ligacao com o cliente: \n\t" + e);
                 // Fecha socket do client
                 try {
                     clientSocket.close();
@@ -285,7 +285,7 @@ public class RepoController {
         try {
             socket = new DatagramSocket();
         } catch(SocketException e) {
-            System.out.println("Não foi possível replicar o ficheiro "+file.getName()+":\n\t" + e);
+            System.out.println("Nao foi possivel replicar o ficheiro "+file.getName()+":\n\t" + e);
         }
         
         if (socket == null)
@@ -341,11 +341,11 @@ public class RepoController {
             } catch (NumberFormatException e) {
                 System.out.println("O porto do servidor deve ser um inteiro positivo:\n\t" + e);
             } catch (SocketTimeoutException e) {
-                System.out.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+                System.out.println("Nao foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
             } catch (SocketException e) {
-                System.out.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+                System.out.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
+                System.out.println("Ocorreu um erro no acesso ao socket do repositorio "+repositoryAddress+port+":\n\t" + e);
             }
             // Debug: Terminou a transferência
             //System.out.println("Concluído");

@@ -35,11 +35,11 @@ public class FileManager {
         currentDirectory = new File(directoryPath);
         
         if (!currentDirectory.exists()) {
-            throw new DirectoryNotFound("A directoria \"" + directoryPath + "\" não existe.");
+            throw new DirectoryNotFound("A directoria \"" + directoryPath + "\" nao existe.");
         }
         
         if (!currentDirectory.isDirectory()) {
-            throw new DirectoryInvalid("O caminho \"" + directoryPath + "\" não se refere a uma directoria.");
+            throw new DirectoryInvalid("O caminho \"" + directoryPath + "\" nao se refere a uma directoria.");
         }
         
         if (!currentDirectory.canWrite()) {

@@ -80,7 +80,7 @@ public class ReplicateRequest implements Runnable {
             replicateThread.start();
         } catch (IOException e) {
             disconnect();
-            System.out.println("<ReplicateRequest> Não foi possível replicar o ficheiro "+file.getName()+":\n\t" + e);
+            System.out.println("<ReplicateRequest> Nao foi possivel replicar o ficheiro "+file.getName()+":\n\t" + e);
             return ResponseType.RES_FAILED;
         }
         return ResponseType.RES_OK;

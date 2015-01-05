@@ -14,7 +14,7 @@ import logic.Monitor;
 
 public class Main {
     
-    public static Monitor monitor;
+    public static Monitor monitor = null;
     public static RMIServiceInterface serviceInterface;
     
     public static void main(String[] args) {
@@ -48,6 +48,11 @@ public class Main {
             System.out.println("Erro na ligacao:\n\t" + e);
         } catch (IOException e) {
             System.out.println("Ocorreu um erro ao:\n\t" + e);
+        } finally {
+            //if (serviceInterface != null && monitor != null)
+                //try {
+                    //serviceInterface.removeObserver(monitor);
+                //} catch (RemoteException e) {}
         }
 
     }

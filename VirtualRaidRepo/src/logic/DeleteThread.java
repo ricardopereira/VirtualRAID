@@ -32,7 +32,7 @@ public class DeleteThread extends Thread {
             msocket = new MulticastSocket(Common.DELETE_PORT);
             msocket.joinGroup(group);
         } catch (IOException e) {
-            System.err.println("Não foi possível iniciar DeleteThread:\n\t"+e.getMessage());
+            System.err.println("Nao foi possivel iniciar DeleteThread:\n\t"+e.getMessage());
             msocket = null;
         }
     }

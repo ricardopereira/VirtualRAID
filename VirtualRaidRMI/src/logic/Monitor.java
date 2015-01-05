@@ -8,6 +8,7 @@ import classes.Repository;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Monitor extends UnicastRemoteObject implements RMIApplicationInterface {
     
@@ -24,9 +25,9 @@ public class Monitor extends UnicastRemoteObject implements RMIApplicationInterf
         if (repo.isEmpty()) {
             System.out.println("Nao existem repositorios ativos!");
         } else {
-            System.out.println("REPOSITORIOS ATIVOS: ");
+            System.out.println((new Date()) + ": REPOSITORIOS ATIVOS: ");
             for (int i = 0; i < repo.size(); i++) {
-                System.out.println("Repositorio " + i + " " + repo.get(i).getAddressAndPort());
+                System.out.println("Repositorio " + (i+1) + ": " + repo.get(i).getAddressAndPort());
             }
         }
     }
@@ -38,7 +39,7 @@ public class Monitor extends UnicastRemoteObject implements RMIApplicationInterf
         if (files.isEmpty())
             System.out.println("Nao existem ficheiros!");
         else {
-            System.out.println("FICHEIROS EXISTENTES: ");
+            System.out.println((new Date()) + ": FICHEIROS EXISTENTES: ");
             for (int i = 0; i < files.size(); i++) {
                 System.out.println(files.get(i).toString());
             } 
@@ -51,7 +52,7 @@ public class Monitor extends UnicastRemoteObject implements RMIApplicationInterf
         if (cli.isEmpty()) 
             System.out.println("Nao existem utilizadores conectados!");
         else {
-            System.out.println("UTILIZADORES CONECTADOS: ");
+            System.out.println((new Date()) + ": UTILIZADORES CONECTADOS: ");
             for (int i = 0; i < cli.size(); i++) {
                 System.out.println(cli.get(i).getUsername());
             }

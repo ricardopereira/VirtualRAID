@@ -67,7 +67,7 @@ public class ResponsesManager extends Thread {
                 // Servidor ficou inactivo
                 return;
             } catch (ClassNotFoundException | IOException e) {
-                System.out.println("<ResponsesManager> Não foi possível receber a resposta do servidor:\n\t" + e);
+                System.out.println("<ResponsesManager> Nao foi possivel receber a resposta do servidor:\n\t" + e);
             }
             
             if (isCanceled)

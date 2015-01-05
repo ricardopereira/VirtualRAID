@@ -38,7 +38,7 @@ public class RepositoriesThread extends Thread {
         try {
             repoSocket = new DatagramSocket(UDP_PORT);
         } catch (SocketException e) {
-            System.err.println("Não foi possível iniciar RepositoriesThread:\n\t"+e.getMessage());
+            System.err.println("Nao foi possivel iniciar RepositoriesThread:\n\t"+e.getMessage());
             repoSocket = null;
         }
     }
@@ -137,7 +137,7 @@ public class RepositoriesThread extends Thread {
             // Envia resposta
             repoSocket.send(packet);
         } catch (IOException e) {
-            System.out.println("<RepositoriesThread> Não foi possível respsota:\n\t" + e);
+            System.out.println("<RepositoriesThread> Nao foi possivel respsota:\n\t" + e);
         }
     }
     

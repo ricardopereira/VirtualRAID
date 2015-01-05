@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.out.println("Repositório não foi iniciado:\n\t- Argumentos <diretoria> [<ip_servidor> <porto_servidor>]");
+            System.out.println("Repositorio nao foi iniciado:\n\t- Argumentos <diretoria> [<ip_servidor> <porto_servidor>]");
             return;
         }
         // Arguments

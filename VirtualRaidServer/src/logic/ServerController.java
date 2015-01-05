@@ -61,7 +61,7 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
         try {
             mainSocket = new ServerSocket(port);
         } catch (SocketException e) {
-            System.err.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+            System.err.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
             return;
         } catch (IOException e) {
             System.err.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
@@ -103,16 +103,16 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
         
         while (true) {
             // À espera de pedidos de ligação...
-            System.out.println("Aguarda ligação de um cliente...\n");
+            System.out.println("Aguarda ligacao de um cliente...\n");
             
             try {
                 clientSocket = mainSocket.accept();
             } catch (IOException e) {
-                System.err.println("Ocorreu um erro enquanto aguardava por um pedido de ligação:\n\t" + e);
+                System.err.println("Ocorreu um erro enquanto aguardava por um pedido de ligacao:\n\t" + e);
                 return; //Termina o servidor
             }
 
-            System.out.println(clientSocket.getInetAddress().getHostAddress()+":"+clientSocket.getPort() + " no porto " + clientSocket.getLocalPort() + " - Cliente estabeleceu ligação");
+            System.out.println(clientSocket.getInetAddress().getHostAddress()+":"+clientSocket.getPort() + " no porto " + clientSocket.getLocalPort() + " - Cliente estabeleceu ligacao");
 
             // Cria thread para o cliente
             ClientThread clientThread = new ClientThread(clientSocket);
@@ -144,6 +144,18 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
                 @Override
                 public void notifyFileChanged() {
                     notifyObserversListFiles();
+                }
+                
+                @Override
+                public boolean isClientOnline(String username) {
+                    if (username == null)
+                        return false;
+                    for (Client item : getActiveUsers()) {
+                        if (item.getUsername().equals(username.trim())) {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
 
             });
@@ -199,10 +211,12 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
         return activeRepositories;
     }
     
-    public ArrayList<Client> getActiveUsers() {
+    public synchronized ArrayList<Client> getActiveUsers() {
         ArrayList<Client> clientList = new ArrayList<>();
-        for (ClientThread clientThread : getActiveClients())
-            clientList.add(clientThread.getClient());
+        for (ClientThread clientThread : getActiveClients()) {
+            if (clientThread.isAuthenticated())
+                clientList.add(clientThread.getClient());
+        }
         return clientList;
     }
     
@@ -237,7 +251,16 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
     
     @Override
     public void addObserver(RMIApplicationInterface app) throws RemoteException {
+        if (getActiveMonitors().contains(app))
+            return;
         getActiveMonitors().add(app);
+    }
+    
+    @Override
+    public void removeObserver(RMIApplicationInterface app) throws RemoteException {
+        if (getActiveMonitors().contains(app)) {
+            getActiveMonitors().remove(app);
+        }
     }
 
     public ArrayList<RMIApplicationInterface> getActiveMonitors() {
@@ -279,13 +302,13 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
             try {
                 registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
             } catch (ExportException e) {
-                System.out.println("Registry já é usado no porto " + Registry.REGISTRY_PORT);
+                System.out.println("Registry ja e' usado no porto " + Registry.REGISTRY_PORT);
                 registry = LocateRegistry.getRegistry();
             }
             try {
                 Naming.bind(Common.RMIService, this);
             } catch (RemoteException | AlreadyBoundException | MalformedURLException e) {
-                System.err.println("Ocorreu um erro ao registar o serviço: " + e);
+                System.err.println("Ocorreu um erro ao registar o servico: " + e);
             }
         } catch (RemoteException re) {
             System.err.println("Remote Error - " + re);

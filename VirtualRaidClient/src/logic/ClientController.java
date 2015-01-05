@@ -58,7 +58,7 @@ public class ClientController {
             return true;
         
         if (localFilesDirectory == null || localFilesDirectory.trim().equals("")) {
-            System.err.println("Diretório de ficheiros não foi definido.");
+            System.err.println("Diretorio de ficheiros nao foi definido.");
             return false;
         }
         
@@ -77,11 +77,11 @@ public class ClientController {
             mainSocket = null;
             return false;
         } catch (SocketTimeoutException e) {
-            System.err.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+            System.err.println("Nao foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
             mainSocket = null;
             return false;
         } catch (SocketException e) {
-            System.err.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+            System.err.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
             mainSocket = null;
             return false;
         } catch (IOException e) {
@@ -165,9 +165,9 @@ public class ClientController {
                 responsesManagerThread.start();
             }
         } catch (ClassNotFoundException e) {
-            System.err.println("Ocorreu um erro a obter o resultado da autenticação:\n\t" + e);
+            System.err.println("Ocorreu um erro a obter o resultado da autenticacao:\n\t" + e);
         } catch (IOException e) {
-            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            System.err.println("Ocorreu um erro de ligacao ao servidor:\n\t" + e);
         }
         return isAuthenticated;
     }
@@ -185,7 +185,7 @@ public class ClientController {
             oos.writeObject(new Request(file, RequestType.REQ_DOWNLOAD));
             oos.flush();
         } catch (IOException e) {
-            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            System.err.println("Ocorreu um erro de ligacao ao servidor:\n\t" + e);
             return ResponseType.RES_FAILED;
         }
         return ResponseType.RES_OK;
@@ -204,7 +204,7 @@ public class ClientController {
             oos.writeObject(new Request(file, RequestType.REQ_UPLOAD));
             oos.flush();
         } catch (IOException e) {
-            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            System.err.println("Ocorreu um erro de ligacao ao servidor:\n\t" + e);
             return ResponseType.RES_FAILED;
         }
         return ResponseType.RES_OK;
@@ -223,7 +223,7 @@ public class ClientController {
             oos.writeObject(new Request(file, RequestType.REQ_DELETE));
             oos.flush();
         } catch (IOException e) {
-            System.err.println("Ocorreu um erro de ligação ao servidor:\n\t" + e);
+            System.err.println("Ocorreu um erro de ligacao ao servidor:\n\t" + e);
             return ResponseType.RES_FAILED;
         }
         return ResponseType.RES_OK;
@@ -235,7 +235,7 @@ public class ClientController {
         }
         
         if (localFilesManager == null) {
-            performFilesError("Não foi especificado uma directoria de ficheiros");
+            performFilesError("Nao foi especificado uma directoria de ficheiros");
             return;
         }
 
@@ -263,9 +263,9 @@ public class ClientController {
                     // Criar FileStream para receber o ficheiro
                     try {
                         localFileOutputStream = new FileOutputStream(localFilesManager.getCurrentDirectoryPath() + file.getName());
-                        performOperationStarted("Iniciar transferência de "+file.getName());
+                        performOperationStarted("Iniciar transferencia de "+file.getName());
                     } catch (IOException e) {
-                        performFilesError("Não foi possível criar o ficheiro "+localFilesManager.getCurrentDirectoryPath() + file.getName());
+                        performFilesError("Nao foi possivel criar o ficheiro "+localFilesManager.getCurrentDirectoryPath() + file.getName());
                         return;
                     }
                     
@@ -280,18 +280,18 @@ public class ClientController {
                     }
                 }
                 else {
-                    performOperationFinished("Ficheiro não está disponível.", false);
+                    performOperationFinished("Ficheiro nao esta disponivel.", false);
                 }
             } catch (UnknownHostException e) {
                 System.out.println("Destino desconhecido:\n\t" + e);
             } catch (NumberFormatException e) {
                 System.out.println("O porto do servidor deve ser um inteiro positivo:\n\t" + e);
             } catch (SocketTimeoutException e) {
-                System.out.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+                System.out.println("Nao foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
             } catch (SocketException e) {
-                System.out.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+                System.out.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
+                System.out.println("Ocorreu um erro no acesso ao socket do repositorio "+repositoryAddress+port+":\n\t" + e);
             }
             // Terminou a transferência
             performOperationFinished("Concluido", false);
@@ -317,7 +317,7 @@ public class ClientController {
             return;
         
         if (localFilesManager == null) {
-            performFilesError("Não foi especificado uma directoria de ficheiros");
+            performFilesError("Nao foi especificado uma directoria de ficheiros");
             return;
         }
         
@@ -345,7 +345,7 @@ public class ClientController {
                 FileInputStream requestedFileInputStream = null;
                 try {
                     requestedFileInputStream = new FileInputStream(localFilesManager.getCurrentDirectoryPath() + file.getName());
-                    performOperationStarted("Iniciar transferência de "+file.getName());
+                    performOperationStarted("Iniciar transferencia de "+file.getName());
                     while ((nbytes = requestedFileInputStream.read(fileChunck)) > 0) {
                         oout.write(fileChunck, 0, nbytes);
                         oout.flush();
@@ -362,14 +362,14 @@ public class ClientController {
             } catch (NumberFormatException e) {
                 System.out.println("O porto do servidor deve ser um inteiro positivo:\n\t" + e);
             } catch (SocketTimeoutException e) {
-                System.out.println("Não foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
+                System.out.println("Nao foi recebida qualquer bloco adicional, podendo a transferencia estar incompleta:\n\t" + e);
             } catch (SocketException e) {
-                System.out.println("Ocorreu um erro ao nível do socket TCP:\n\t" + e);
+                System.out.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
+                System.out.println("Ocorreu um erro no acesso ao socket do repositorio "+repositoryAddress+port+":\n\t" + e);
             }
             // Terminou a transferência
-            performOperationFinished("Concluído", true);
+            performOperationFinished("Concluido", true);
         } finally {
             if (tempSocket != null) {
                 try {
@@ -478,7 +478,7 @@ public class ClientController {
     
     public FileManager getLocalFilesManager() {
         if (localFilesManager == null)
-            System.err.println("Gestor de ficheiros não foi definido");
+            System.err.println("Gestor de ficheiros nao foi definido");
         return localFilesManager;
     }
  

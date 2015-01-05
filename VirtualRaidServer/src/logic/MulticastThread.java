@@ -28,7 +28,7 @@ public class MulticastThread extends Thread {
             msocket = new MulticastSocket(Common.MULTICAST_PORT);
             msocket.joinGroup(group);
         } catch (IOException e) {
-            System.err.println("Não foi possível iniciar MulticastThread:\n\t"+e.getMessage());
+            System.err.println("Nao foi possivel iniciar MulticastThread:\n\t"+e.getMessage());
             msocket = null;
         }
     }

@@ -39,7 +39,7 @@ public class CheckRepositoriesTimer extends Thread {
                     i.remove();
                     hasChanged = true;
                     // Debug
-                    System.out.println("Repositório "+item.getAddressAndPort()+" removido por inactividade");
+                    System.out.println("Repositorio "+item.getAddressAndPort()+" removido por inactividade");
                 }
             }
             

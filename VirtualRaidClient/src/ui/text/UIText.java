@@ -77,10 +77,10 @@ public class UIText {
         ctrl.setLocalFilesDirectory(localFilesDir);
         
         if (serverAddress == null || serverAddress.trim().equals("")) {
-            System.out.println("À procura do servidor\n...");
+            System.out.println("A procura do servidor\n...");
             // Procura o servidor
             if (findServer()) {
-                System.out.println("Iniciar ligação com: "+getServerAddress()+":"+getServerPort());
+                System.out.println("Iniciar ligacao com: "+getServerAddress()+":"+getServerPort());
             }
             else {
                 System.out.println("Nenhum servidor encontrado.");
@@ -95,7 +95,7 @@ public class UIText {
                 System.out.println("Ligado ao servidor principal...");
             }
             else {
-                System.out.println("Sem ligação ao servidor.");
+                System.out.println("Sem ligacao ao servidor.");
                 return;
             }
         }
@@ -149,7 +149,7 @@ public class UIText {
         else {
             // Escolha da opção do Menu...
             do {
-                System.out.println(" Opção: ");
+                System.out.println(" Opcao: ");
                 opt = getOptionNumber();
             } while (opt < APP_EXIT || opt > 3);
         }
@@ -173,7 +173,7 @@ public class UIText {
                 if (opt >= 0 && opt < ctrl.getFilesList().size()) {
                     // Criar cópia do registo para evitar problemas com as threads
                     VirtualFile choosedFile = new VirtualFile(ctrl.getFilesList().get(opt));
-                    System.out.println("Transferência de :\n\t" + choosedFile.toString());
+                    System.out.println("Transferencia de :\n\t" + choosedFile.toString());
                     
                     // RP: pensar no caso em que um cliente escolheu um ficheiro
                     //mas ainda não se iniciou o download e outro cliente
@@ -183,7 +183,7 @@ public class UIText {
                     hasPendingRequest = true;
                 }
                 else {
-                    System.out.println("Ficheiro não encontrado.\n");
+                    System.out.println("Ficheiro nao encontrado.\n");
                     currentMenuOption = MenuOptions.OPT_NONE;
                 }
                 break;
@@ -197,7 +197,7 @@ public class UIText {
                 opt = getOptionNumber();
                 
                 if (opt < 0 || opt >= ctrl.getLocalFilesList().size()) {
-                    System.out.println("Ficheiro local não existe.");
+                    System.out.println("Ficheiro local nao existe.");
                     currentMenuOption = MenuOptions.OPT_NONE;
                 }
                 else {
@@ -215,7 +215,7 @@ public class UIText {
                 if (opt >= 0 && opt < ctrl.getFilesList().size()) {
                     // Criar cópia do registo para evitar problemas com as threads
                     VirtualFile choosedFile = new VirtualFile(ctrl.getFilesList().get(opt));
-                    System.out.println("Enviar pedido de remoção de :\n\t" + choosedFile.toString());                    
+                    System.out.println("Enviar pedido de remocao de :\n\t" + choosedFile.toString());                    
                     ctrl.requestDeleteFile(choosedFile);
                 }
                 else {
@@ -237,7 +237,7 @@ public class UIText {
         Login login = null;
         String word;
 
-        System.out.println("\nAUTENTICAÇÃO");
+        System.out.println("\nAUTENTICACAO");
         Scanner sc = new Scanner(System.in);
         System.out.print("Username: ");
         while ((word = sc.nextLine()) != null) {
@@ -253,7 +253,7 @@ public class UIText {
         if (ctrl.authenticate(login))
             System.out.println("Login com sucesso.\n");
         else
-            System.out.println("Credenciais inválidas.\n");
+            System.out.println("Credenciais invalidas.\n");
     }
     
     private void printMenuOptions() {

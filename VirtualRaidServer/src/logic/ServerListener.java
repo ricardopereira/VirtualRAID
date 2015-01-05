@@ -18,4 +18,6 @@ public interface ServerListener {
     
     FilesList getFilesList();
     void notifyFileChanged();
+    
+    boolean isClientOnline(String username);
 }
