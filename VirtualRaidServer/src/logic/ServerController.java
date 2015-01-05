@@ -2,6 +2,7 @@ package logic;
 
 import classes.RepositoriesList;
 import classes.Client;
+import classes.Common;
 import classes.FilesList;
 import classes.RMIApplicationInterface;
 import classes.RMIServiceInterface;
@@ -282,7 +283,7 @@ public class ServerController extends UnicastRemoteObject implements RMIServiceI
                 registry = LocateRegistry.getRegistry();
             }
             try {
-                Naming.bind("RMIService", this);
+                Naming.bind(Common.RMIService, this);
             } catch (RemoteException | AlreadyBoundException | MalformedURLException e) {
                 System.err.println("Ocorreu um erro ao registar o serviço: " + e);
             }

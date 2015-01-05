@@ -16,6 +16,6 @@ public interface ClientListener {
     void onResponseError(ResponseType status);
     void onOperationStarted(String fileName);
     void onOperationProgress(int nbytes);
-    void onOperationFinished(String message);
+    void onOperationFinished(String message, boolean returnMenu);
     
 }

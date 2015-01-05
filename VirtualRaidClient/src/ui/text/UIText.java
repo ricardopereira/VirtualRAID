@@ -133,11 +133,17 @@ public class UIText {
             // Tem acção pendente, ou seja, está a fazer download ou upload
             //e dar possibilidade de cancelar...
             do {
-                System.out.println("Prima a tecla "+APP_DONE+" para cancelar: ");
+                System.out.println(" Prima a tecla "+APP_DONE+" para voltar: ");
                 opt = getOptionNumber();
+                
+                // Teste
+                if (opt == APP_DONE)
+                    hasPendingRequest = false;
+                
             } while (opt != APP_DONE && hasPendingRequest);
             
             // ToDo: Cancel...
+            
             return APP_DONE;
         }
         else {
@@ -276,22 +282,11 @@ public class UIText {
     
     private void printPendingRequest(boolean printCancelOption) {
         // Se tiver opção seleccionada...
-        switch (currentMenuOption) {
-            case OPT_DOWNLOAD:
-                
-                break;
-            case OPT_UPLOAD:
-                
-                break;
-            default:
-                System.out.println("[DEBUG] printPendingRequest: algo correu mal...");
-                break;
-        }
         if (printCancelOption)
-            System.out.println(" Prima a tecla "+APP_DONE+" para cancelar: ");
+            System.out.println(" Prima a tecla "+APP_DONE+" para voltar: ");
     }
     
-    private void printPendingChoice(boolean printChooseOption) {        
+    private void printPendingChoice(boolean printChooseOption) {
         // Imprime a lista de ficheiros remotos
         System.out.println("\nFICHEIROS NO SISTEMA:");
         if (ctrl.canUseFilesList()) {
@@ -374,14 +369,18 @@ public class UIText {
         }
         
         @Override
-        public void onOperationFinished(String message) {
+        public void onOperationFinished(String message, boolean returnMenu) {
             System.out.println(message);
             restoreInterface();
+            
+            // Teste
+            if (returnMenu)
+                hasPendingRequest = true;
         }
         
         private void restoreInterface() {
             if (hasPendingRequest) {
-                System.out.println("Prima a tecla 9 para voltar ao menu: ");                
+                System.out.println(" Prima a tecla "+APP_DONE+" para voltar: ");
             }
             hasPendingRequest = false;
             currentMenuOption = MenuOptions.OPT_NONE;

@@ -5,6 +5,7 @@ import classes.Response;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.SocketException;
 
 /**
  * ResponsesManager classe.
@@ -62,7 +63,8 @@ public class ResponsesManager extends Thread {
                     // Recebeu uma resposta de um pedido efectuado
                     notifyResponse((Response) resultFromServer);
                 }                
-            } catch (EOFException e) {
+            } catch (EOFException | SocketException e) {
+                // Servidor ficou inactivo
                 return;
             } catch (ClassNotFoundException | IOException e) {
                 System.out.println("<ResponsesManager> Não foi possível receber a resposta do servidor:\n\t" + e);

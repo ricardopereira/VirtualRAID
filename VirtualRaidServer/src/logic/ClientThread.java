@@ -11,6 +11,7 @@ import classes.VirtualFile;
 import enums.RequestType;
 import enums.ResponseType;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -116,6 +117,9 @@ public class ClientThread extends Thread {
                         // Devolver resposta
                         switch (req.getOption()) {
                             case REQ_DOWNLOAD:
+                                // Debug
+                                System.out.println(getClient().getUsername() + ": pediu download de "+req.getFile().getName()+"\n");
+                                
                                 oos = new ObjectOutputStream(socket.getOutputStream());
                                 repo = serverListener.getRepositoriesList().getItemWithFileAndMinorConnections(req.getFile());
                                 if (repo == null) {
@@ -128,6 +132,9 @@ public class ClientThread extends Thread {
                                 oos.flush();                                    
                                 break;
                             case REQ_UPLOAD:
+                                // Debug
+                                System.out.println(getClient().getUsername() + ": pediu upload de "+req.getFile().getName()+"\n");
+                                
                                 oos = new ObjectOutputStream(socket.getOutputStream());
                                 repo = serverListener.getRepositoriesList().getItemWithMinorConnections(req.getFile());
                                 if (repo == null) {
@@ -140,7 +147,13 @@ public class ClientThread extends Thread {
                                 oos.flush();
                                 break;
                             case REQ_DELETE:
+                                // Debug
+                                System.out.println(getClient().getUsername() + ": pediu delete de "+req.getFile().getName()+"\n");
+                                
                                 deleteFile(req.getFile());
+                                break;
+                            default:
+                                System.out.println("VirtualRaidLibrary imcompativel");
                                 break;
                         }
                     }
@@ -148,8 +161,10 @@ public class ClientThread extends Thread {
                     System.err.println("<Server:ClientThread> Ocorreu um erro a receber pedido: " + e);
                 }
             }
+        } catch (EOFException e) {
+            // Cliente fechou a ligação
         } catch (SocketTimeoutException e) {
-            System.err.println("<Server:ClientThread> Ligação terminou: " + e);
+            System.out.println("<Server:ClientThread> Ligação terminou: " + e);
         } catch(IOException e){
             System.err.println("<Server:ClientThread> Ocorreu um erro de ligação: " + e);
         } finally {

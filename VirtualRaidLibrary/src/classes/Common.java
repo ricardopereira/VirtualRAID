@@ -18,4 +18,7 @@ public class Common {
     
     public static final int FILECHUNK_MAX_SIZE = 4000;
     
+    // RMI
+    public static final String RMIService = "RMIService";
+    
 }

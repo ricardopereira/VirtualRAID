@@ -280,7 +280,7 @@ public class ClientController {
                     }
                 }
                 else {
-                    performOperationFinished("Ficheiro não está disponível.");
+                    performOperationFinished("Ficheiro não está disponível.", false);
                 }
             } catch (UnknownHostException e) {
                 System.out.println("Destino desconhecido:\n\t" + e);
@@ -294,7 +294,7 @@ public class ClientController {
                 System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
             }
             // Terminou a transferência
-            performOperationFinished("Concluido");
+            performOperationFinished("Concluido", false);
         } finally {
             if (tempSocket != null) {
                 try {
@@ -369,7 +369,7 @@ public class ClientController {
                 System.out.println("Ocorreu um erro no acesso ao socket do repositório "+repositoryAddress+port+":\n\t" + e);
             }
             // Terminou a transferência
-            performOperationFinished("Concluído");
+            performOperationFinished("Concluído", true);
         } finally {
             if (tempSocket != null) {
                 try {
@@ -400,6 +400,9 @@ public class ClientController {
                 case REQ_UPLOAD:
                     uploadFile(res.getRepositoryAddress(), res.getRepositoryPort(), 
                         res.getRequested().getFile());
+                    break;
+                default:
+                    System.out.println("VirtualRaidLibrary imcompativel");
                     break;
             }
         }
@@ -447,9 +450,9 @@ public class ClientController {
             clientListener.onOperationProgress(nbytes);
     }
     
-    private void performOperationFinished(String message) {
+    private void performOperationFinished(String message, boolean returnMenu) {
         if (clientListener != null)
-            clientListener.onOperationFinished(message);
+            clientListener.onOperationFinished(message, returnMenu);
     }
     
     public void setClientListener(ClientListener listener) {
